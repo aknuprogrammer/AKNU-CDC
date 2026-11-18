@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "Adikavi Nannaya University",
+    "subtitle": "College Development Council (CDC) - Affiliation Fee Portal",
+    "campus": "Rajamahendravaram - 533296, Andhra Pradesh",
+    "academicYear": "Academic Year 2026-27"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "colleges": "Colleges Master",
+    "courses": "Courses Master",
+    "proceedings": "Proceedings & Affiliation",
+    "students": "Student Data & Intake",
+    "faculty": "Faculty Register",
+    "feeEngine": "Fee Engine & Demands",
+    "lateFee": "Late Fee & Waivers",
+    "payments": "Payments & Accounts",
+    "workflow": "Workflow & Queries",
+    "reports": "AISHE & Reports",
+    "logout": "Logout",
+    "language": "Language",
+    "profile": "Profile"
+  },
+  "auth": {
+    "loginTitle": "AKNU CDC Portal Login",
+    "universityLogin": "University Officials Login",
+    "collegeLogin": "Affiliated College Login",
+    "collegeCodePlaceholder": "Enter College Code (e.g. 001, 042)",
+    "emailPlaceholder": "Official AKNU Email / Phone",
+    "otpPlaceholder": "Enter 6-digit OTP",
+    "sendOtp": "Send OTP to Registered Mobile",
+    "verifyLogin": "Verify & Login",
+    "devHint": "Demo Mode: Standard verification OTP is 123456",
+    "resendOtp": "Resend OTP"
+  },
+  "common": {
+    "search": "Search",
+    "filter": "Filter",
+    "status": "Status",
+    "action": "Actions",
+    "view": "View",
+    "download": "Download",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "approve": "Approve",
+    "sign": "DSC Sign",
+    "pay": "Pay Fee",
+    "receipt": "Receipt",
+    "qrVerify": "Verify QR",
+    "total": "Total",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error"
+  }
+}

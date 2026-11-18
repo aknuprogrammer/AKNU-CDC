@@ -1,0 +1,523 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  DEAN_CDC
+  FINANCE_OFFICER
+  REGISTRAR
+  VICE_CHANCELLOR
+  SECTION_OFFICER
+  SUPERINTENDENT
+  CLERK
+  COLLEGE_PRINCIPAL
+  COLLEGE_STAFF
+}
+
+enum CourseGroup {
+  UG
+  PG
+  MBA_MCA
+  LAW
+  EDUCATION
+  PHYSICAL_EDUCATION
+  ALL
+}
+
+enum CollegeType {
+  GOVERNMENT
+  AIDED
+  UNAIDED
+}
+
+enum CollegeLocation {
+  RURAL
+  URBAN
+}
+
+enum ProceedingStatus {
+  DRAFT
+  SUPERINTENDENT_CHECKED
+  APPROVED
+  ISSUED
+  ACKNOWLEDGED
+  REJECTED
+}
+
+enum ProceedingType {
+  AFFILIATION
+  INTAKE_SANCTION
+  CORRIGENDUM
+  SUPPLEMENTARY
+  FEE_NOTICE
+  CIRCULAR
+}
+
+enum StudentGender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum StudentCategory {
+  SC
+  ST
+  BC
+  OC
+}
+
+enum AdmissionQuota {
+  CONVENOR
+  SPOT
+  MANAGEMENT
+}
+
+enum StudentStatus {
+  ACTIVE
+  PROMOTED
+  DETAINED
+  LEFT
+  DISCONTINUED
+}
+
+enum RuleType {
+  FLAT_PER_COLLEGE
+  SLAB_STUDENTS
+  SLAB_AFFILIATION
+  PER_SECTION
+  PER_STUDENT_YEAR
+  OPTIONAL_HOSTEL
+}
+
+enum DemandStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum DemandType {
+  REGULAR
+  SUPPLEMENTARY
+  REVISED
+}
+
+enum PaymentGateway {
+  SBI_COLLECT
+  RAZORPAY
+  MANUAL_CHALLAN
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum WorkflowStage {
+  CLERK
+  SUPERINTENDENT
+  DEAN
+  COLLEGE
+}
+
+enum QueryStatus {
+  OPEN
+  RESOLVED
+}
+
+enum NotificationType {
+  SMS
+  EMAIL
+  IN_APP
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  phone           String
+  name            String
+  role            Role
+  courseSection   CourseGroup    @default(ALL)
+  collegeId       String?
+  college         College?       @relation(fields: [collegeId], references: [id])
+  passwordHash    String?
+  otpCode         String?
+  otpExpiresAt    DateTime?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  proceedingsDrafted   Proceeding[] @relation("DraftedBy")
+  proceedingsApproved  Proceeding[] @relation("ApprovedBy")
+  auditLogs            AuditLog[]
+  workflowQueriesFrom  WorkflowQuery[] @relation("QueriesFrom")
+  workflowQueriesTo    WorkflowQuery[] @relation("QueriesTo")
+
+  @@index([role])
+  @@index([courseSection])
+}
+
+model College {
+  id               String          @id @default(uuid())
+  code             String          @unique // e.g. "001", "142", etc.
+  name             String
+  type             CollegeType     @default(UNAIDED)
+  isAutonomous     Boolean         @default(false)
+  location         CollegeLocation @default(RURAL)
+  district         String          // East Godavari, West Godavari, Kakinada, Konaseema, Eluru
+  address          String
+  pincode          String
+  principalName    String
+  principalMobile  String
+  principalEmail   String
+  alternatePhone   String?
+  hasHostel        Boolean         @default(false)
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  users            User[]
+  courses          CollegeCourseIntake[]
+  students         Student[]
+  faculty          Faculty[]
+  proceedings      Proceeding[]
+  demands          Demand[]
+  payments         Payment[]
+  workflowQueries  WorkflowQuery[]
+  notifications    Notification[]
+
+  @@index([code])
+  @@index([district])
+}
+
+model Course {
+  id              String      @id @default(uuid())
+  code            String      @unique // e.g. "B.Sc-MPC", "B.A", "B.Com", "MCA", "MBA", "LL.B-3Y", "B.Ed"
+  name            String
+  courseGroup     CourseGroup
+  durationYears   Int         // e.g. UG=4 (NEP), PG=2, LLB=3 or 5, B.Ed=2
+  degreeLevel     String      // "UG", "PG", "PROFESSIONAL"
+  isComputer      Boolean     @default(false)
+  active          Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  collegeIntakes  CollegeCourseIntake[]
+  students        Student[]
+  faculty         Faculty[]
+
+  @@index([courseGroup])
+}
+
+model CollegeCourseIntake {
+  id              String       @id @default(uuid())
+  collegeId       String
+  college         College      @relation(fields: [collegeId], references: [id])
+  courseId        String
+  course          Course       @relation(fields: [courseId], references: [id])
+  academicYear    String       // e.g. "2026-27"
+  sanctionedIntake Int
+  convenorQuota   Int
+  spotAdmission   Int
+  managementQuota Int
+  active          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([collegeId, courseId, academicYear])
+  @@index([academicYear])
+}
+
+model Proceeding {
+  id                 String           @id @default(uuid())
+  proceedingNumber   String           @unique // e.g. "AKNU/CDC/AFFIL/2026-27/042"
+  academicYear       String           // "2026-27"
+  collegeId          String
+  college            College          @relation(fields: [collegeId], references: [id])
+  courseGroupId      CourseGroup
+  templateType       ProceedingType   @default(AFFILIATION)
+  status             ProceedingStatus @default(DRAFT)
+  draftedById        String?
+  draftedBy          User?            @relation("DraftedBy", fields: [draftedById], references: [id])
+  superintendentId   String?
+  approvedById       String?
+  approvedBy         User?            @relation("ApprovedBy", fields: [approvedById], references: [id])
+  subject            String
+  bodyTemplate       String           @db.Text
+  conditions         String?          @db.Text
+  dscSignatureHash   String?
+  qrVerificationCode String           @unique
+  pdfUrl             String?
+  acknowledgedAt     DateTime?
+  issuedAt           DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  items              ProceedingItem[]
+
+  @@index([collegeId])
+  @@index([courseGroupId])
+  @@index([status])
+}
+
+model ProceedingItem {
+  id               String     @id @default(uuid())
+  proceedingId     String
+  proceeding       Proceeding @relation(fields: [proceedingId], references: [id], onDelete: Cascade)
+  courseName       String
+  sanctionedIntake Int
+  convenorQuota    Int
+  spotAdmission    Int
+  managementQuota  Int
+  remarks          String?
+}
+
+model Student {
+  id             String          @id @default(uuid())
+  collegeId      String
+  college        College         @relation(fields: [collegeId], references: [id])
+  courseId       String
+  course         Course          @relation(fields: [courseId], references: [id])
+  academicYear   String          // "2026-27"
+  admissionNo    String          // unique within college
+  name           String
+  fatherName     String
+  gender         StudentGender
+  dob            DateTime
+  category       StudentCategory // SC, ST, BC, OC
+  isPh           Boolean         @default(false)
+  isMinority     Boolean         @default(false)
+  yearOfStudy    Int             // 1, 2, 3, 4, 5
+  quota          AdmissionQuota  // CONVENOR, SPOT, MANAGEMENT
+  admissionDate  DateTime
+  apaarId        String          @unique // Automated Permanent Academic Account Registry - unique across system
+  status         StudentStatus   @default(ACTIVE)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  demandItems    DemandItem[]
+
+  @@unique([collegeId, admissionNo])
+  @@index([collegeId, courseId])
+  @@index([academicYear])
+  @@index([apaarId])
+}
+
+model Faculty {
+  id            String    @id @default(uuid())
+  collegeId     String
+  college       College   @relation(fields: [collegeId], references: [id])
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id])
+  name          String
+  designation   String    // Assistant Professor, Associate Professor, Principal, Lecturer
+  qualification String    // Ph.D, NET, SET, M.Phil, PG
+  panNumber     String
+  aadharLast4   String    // Last 4 digits only for compliance
+  isRatified    Boolean   @default(false)
+  ratifyYear    String?
+  mobile        String
+  email         String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([collegeId])
+}
+
+model FeeRule {
+  id               String       @id @default(uuid())
+  academicYear     String       // "2026-27"
+  courseGroup      CourseGroup  // UG, PG, MBA_MCA, LAW, EDUCATION, PHYSICAL_EDUCATION
+  ruleName         String       // "Inspection Fee", "Affiliation Fee Slab", "ICGS", "Tuition/Student Fee", "Hostel Recognition"
+  ruleType         RuleType
+  baseAmountPaise  BigInt       @default(0) // integer paise
+  slabJson         String?      @db.Text   // JSON representation of student/intake thresholds and paise amounts
+  year1Paise       BigInt       @default(0)
+  otherYearsPaise  BigInt       @default(0)
+  compSciencePaise BigInt       @default(0)
+  compArtsPaise    BigInt       @default(0)
+  mqArtsPaise      BigInt       @default(0)
+  mqSciencePaise   BigInt       @default(0)
+  ruralPaise       BigInt       @default(0)
+  urbanPaise       BigInt       @default(0)
+  description      String?
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([academicYear, courseGroup])
+}
+
+model Demand {
+  id               String       @id @default(uuid())
+  demandNumber     String       @unique // e.g. "DMD/2026-27/UG/001"
+  collegeId        String
+  college          College      @relation(fields: [collegeId], references: [id])
+  courseGroupId    CourseGroup
+  academicYear     String       // "2026-27"
+  demandType       DemandType   @default(REGULAR)
+  totalPaise       BigInt       @default(0)
+  paidPaise        BigInt       @default(0)
+  balancePaise     BigInt       @default(0)
+  lateFeePaise     BigInt       @default(0)
+  status           DemandStatus @default(PENDING)
+  dueDate          DateTime
+  graceDays        Int          @default(15)
+  isLocked         Boolean      @default(false)
+  breakdownJson    String       @db.Text
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  items            DemandItem[]
+  allocations      PaymentDemandAllocation[]
+  waivers          LateFeeWaiver[]
+  workflowQueries  WorkflowQuery[]
+
+  @@index([collegeId, academicYear])
+  @@index([courseGroupId])
+  @@index([status])
+}
+
+model DemandItem {
+  id           String    @id @default(uuid())
+  demandId     String
+  demand       Demand    @relation(fields: [demandId], references: [id], onDelete: Cascade)
+  studentId    String?
+  student      Student?  @relation(fields: [studentId], references: [id])
+  feeHead      String
+  description  String
+  amountPaise  BigInt
+  isPaid       Boolean   @default(false)
+
+  @@index([demandId])
+}
+
+model LateFeeWaiver {
+  id             String    @id @default(uuid())
+  demandId       String
+  demand         Demand    @relation(fields: [demandId], references: [id])
+  requestedById  String
+  approvedById   String?
+  waivedPaise    BigInt
+  reason         String
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  requestedAt    DateTime  @default(now())
+  reviewedAt     DateTime?
+
+  @@index([demandId])
+}
+
+model Payment {
+  id                    String         @id @default(uuid())
+  receiptNumber         String         @unique // e.g. "RCP/2026-27/00014"
+  collegeId             String
+  college               College        @relation(fields: [collegeId], references: [id])
+  totalAmountPaise      BigInt
+  gateway               PaymentGateway
+  gatewayOrderId        String?        @unique
+  gatewayPaymentId      String?        @unique
+  gatewaySignature      String?
+  status                PaymentStatus  @default(INITIATED)
+  qrReceiptCode         String         @unique
+  idempotencyKey        String         @unique
+  reconciled            Boolean        @default(false)
+  reconciliationBatchId String?
+  rawPayload            String?        @db.Text
+  paidAt                DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  allocations           PaymentDemandAllocation[]
+
+  @@index([collegeId])
+  @@index([status])
+  @@index([idempotencyKey])
+}
+
+model PaymentDemandAllocation {
+  id            String   @id @default(uuid())
+  paymentId     String
+  payment       Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  demandId      String
+  demand        Demand   @relation(fields: [demandId], references: [id])
+  allocatedPaise BigInt
+
+  @@unique([paymentId, demandId])
+}
+
+model WorkflowQuery {
+  id             String        @id @default(uuid())
+  collegeId      String
+  college        College       @relation(fields: [collegeId], references: [id])
+  courseGroupId  CourseGroup
+  demandId       String?
+  demand         Demand?       @relation(fields: [demandId], references: [id])
+  stage          WorkflowStage @default(CLERK)
+  fromUserId     String
+  fromUser       User          @relation("QueriesFrom", fields: [fromUserId], references: [id])
+  toUserId       String?
+  toUser         User?         @relation("QueriesTo", fields: [toUserId], references: [id])
+  subject        String
+  queryText      String        @db.Text
+  responseText   String?       @db.Text
+  status         QueryStatus   @default(OPEN)
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([collegeId])
+  @@index([courseGroupId])
+  @@index([status])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String   // LOGIN, DRAFT_PROCEEDING, APPROVE_PROCEEDING, GENERATE_DEMAND, RECORD_PAYMENT, WAIVE_LATE_FEE, UPLOAD_STUDENTS
+  entityName  String   // Proceeding, Demand, Student, Payment, College
+  entityId    String?
+  oldValue    String?  @db.Text
+  newValue    String?  @db.Text
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entityName, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id             String           @id @default(uuid())
+  collegeId      String?
+  college        College?         @relation(fields: [collegeId], references: [id])
+  userId         String?
+  type           NotificationType
+  recipient      String           // Mobile or Email
+  subject        String?
+  content        String           @db.Text
+  dltTemplateId  String?
+  status         String           @default("PENDING") // PENDING, SENT, FAILED
+  sentAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([status])
+}
+
+model SectionCourseMapping {
+  id          String      @id @default(uuid())
+  role        Role
+  courseGroup CourseGroup
+  description String?
+
+  @@unique([role, courseGroup])
+}
