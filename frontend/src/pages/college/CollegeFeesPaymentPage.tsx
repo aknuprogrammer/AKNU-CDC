@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/client';
 import { Demand, PaymentReceipt } from '../../api/types';
+import { useSearchParams } from 'react-router-dom';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -47,12 +48,24 @@ export const CollegeFeesPaymentPage: React.FC = () => {
   const [receiptDrawer, setReceiptDrawer] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState<PaymentReceipt | null>(null);
 
+  const [searchParams] = useSearchParams();
+  const targetDemandId = searchParams.get('demandId');
+  const [breakdownDrawer, setBreakdownDrawer] = useState(false);
+  const [selectedDemandForBreakdown, setSelectedDemandForBreakdown] = useState<Demand | null>(null);
+
   const loadDemands = async () => {
     if (!college) return;
     setLoading(true);
     try {
       const res = await api.fees.listDemands({ collegeId: college.id });
       setDemands(res.data);
+      if (targetDemandId) {
+        const found = res.data.find((d) => d.id === targetDemandId || d.demandNumber === targetDemandId);
+        if (found) {
+          setSelectedRowKeys([found.id]);
+          setSelectedDemandForBreakdown(found);
+        }
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -62,7 +75,7 @@ export const CollegeFeesPaymentPage: React.FC = () => {
 
   useEffect(() => {
     loadDemands();
-  }, [college]);
+  }, [college, targetDemandId]);
 
   const selectedDemands = demands.filter((d) => selectedRowKeys.includes(d.id));
   const totalPayableINR = selectedDemands.reduce((sum, d) => sum + d.balanceINR, 0);
@@ -269,6 +282,37 @@ export const CollegeFeesPaymentPage: React.FC = () => {
                 return <Tag color={color} style={{ fontWeight: 600 }}>{r.status}</Tag>;
               },
             },
+            {
+              title: 'Actions',
+              key: 'actions',
+              render: (_, r) => (
+                <Space size="small">
+                  <Button
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() => {
+                      setSelectedDemandForBreakdown(r);
+                      setBreakdownDrawer(true);
+                    }}
+                  >
+                    Breakdown
+                  </Button>
+                  {r.status !== 'PAID' && !r.isLocked && (
+                    <Button
+                      size="small"
+                      type="primary"
+                      style={{ background: '#1e3c72' }}
+                      onClick={() => {
+                        setSelectedRowKeys([r.id]);
+                        setCheckoutModal(true);
+                      }}
+                    >
+                      Pay Now
+                    </Button>
+                  )}
+                </Space>
+              ),
+            },
           ]}
         />
       </Card>
@@ -386,6 +430,114 @@ export const CollegeFeesPaymentPage: React.FC = () => {
                 </Button>
               </div>
             </div>
+          </Space>
+        )}
+      </Drawer>
+      {/* Demand Itemized Breakdown Drawer */}
+      <Drawer
+        title={
+          <Space>
+            <DollarOutlined style={{ color: '#1e3c72' }} />
+            <span>Official Fee Demand Breakdown: {selectedDemandForBreakdown?.demandNumber}</span>
+          </Space>
+        }
+        width={720}
+        open={breakdownDrawer}
+        onClose={() => setBreakdownDrawer(false)}
+        footer={
+          selectedDemandForBreakdown && selectedDemandForBreakdown.status !== 'PAID' && !selectedDemandForBreakdown.isLocked ? (
+            <div style={{ textAlign: 'right' }}>
+              <Space>
+                <Button onClick={() => setBreakdownDrawer(false)}>Close</Button>
+                <Button
+                  type="primary"
+                  icon={<CreditCardOutlined />}
+                  style={{ background: '#1e3c72', fontWeight: 600 }}
+                  onClick={() => {
+                    setBreakdownDrawer(false);
+                    setSelectedRowKeys([selectedDemandForBreakdown.id]);
+                    setCheckoutModal(true);
+                  }}
+                >
+                  Pay Balance ₹{selectedDemandForBreakdown.balanceINR?.toLocaleString()}
+                </Button>
+              </Space>
+            </div>
+          ) : null
+        }
+      >
+        {selectedDemandForBreakdown && (
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Alert
+              message={`Official Affiliation Fee Demand (${selectedDemandForBreakdown.academicYear})`}
+              description={`Issued by Adikavi Nannaya University CDC. Status: ${selectedDemandForBreakdown.status}`}
+              type={selectedDemandForBreakdown.status === 'PAID' ? 'success' : 'info'}
+              showIcon
+            />
+
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label="Demand No">{selectedDemandForBreakdown.demandNumber}</Descriptions.Item>
+              <Descriptions.Item label="Course Section">
+                <Tag color="blue">{selectedDemandForBreakdown.courseGroupId}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Academic Year">{selectedDemandForBreakdown.academicYear}</Descriptions.Item>
+              <Descriptions.Item label="Demand Type">{selectedDemandForBreakdown.demandType}</Descriptions.Item>
+              <Descriptions.Item label="Due Date">{new Date(selectedDemandForBreakdown.dueDate).toLocaleDateString()}</Descriptions.Item>
+              <Descriptions.Item label="Grace Period">{selectedDemandForBreakdown.graceDays} Days</Descriptions.Item>
+              <Descriptions.Item label="Total Demanded">
+                <Text strong style={{ fontSize: '15px', color: '#1e3c72' }}>
+                  ₹{selectedDemandForBreakdown.totalINR?.toLocaleString()}
+                </Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="Balance Payable">
+                <Text strong style={{ fontSize: '16px', color: selectedDemandForBreakdown.balanceINR > 0 ? '#f5222d' : '#52c41a' }}>
+                  ₹{selectedDemandForBreakdown.balanceINR?.toLocaleString()}
+                </Text>
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Title level={5} style={{ marginTop: 12 }}>Itemized Fee Heads Breakdown:</Title>
+            <Table
+              size="small"
+              pagination={false}
+              dataSource={selectedDemandForBreakdown.breakdown || []}
+              rowKey="id"
+              columns={[
+                {
+                  title: 'Fee Head & Category',
+                  key: 'head',
+                  render: (_, r: any) => (
+                    <div>
+                      <Text strong>{r.head}</Text>
+                      <div style={{ fontSize: '11px', color: '#888' }}>{r.description}</div>
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Units / Students',
+                  dataIndex: 'unitCount',
+                  key: 'unitCount',
+                  align: 'center',
+                  render: (c) => <Tag>{c}</Tag>,
+                },
+                {
+                  title: 'Rate',
+                  key: 'rate',
+                  align: 'right',
+                  render: (_, r: any) => `₹${Math.round((r.ratePaise || 0) / 100).toLocaleString()}`,
+                },
+                {
+                  title: 'Total Amount',
+                  key: 'amt',
+                  align: 'right',
+                  render: (_, r: any) => (
+                    <Text strong style={{ color: '#002147' }}>
+                      ₹{Math.round((r.amountPaise || 0) / 100).toLocaleString()}
+                    </Text>
+                  ),
+                },
+              ]}
+            />
           </Space>
         )}
       </Drawer>

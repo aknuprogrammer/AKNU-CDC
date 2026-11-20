@@ -120,47 +120,6 @@ export class AuthService {
           u.phone === cleanId ||
           (u.collegeId && mockDb.colleges.find((c) => c.id === u.collegeId)?.code.toLowerCase() === cleanId),
       );
-
-      if (!user && !cleanId.includes('@')) {
-        // Dynamic college code direct verification
-        const code = cleanId.toUpperCase();
-        let college = mockDb.colleges.find((c) => c.code.toLowerCase() === cleanId);
-        const known = KNOWN_PRINCIPALS[code];
-        if (!college) {
-          college = {
-            id: `col-${cleanId.toLowerCase()}`,
-            code: code,
-            name: known?.collegeName || `Affiliated College (${code})`,
-            type: 'UNAIDED',
-            isAutonomous: false,
-            location: 'RURAL',
-            district: 'East Godavari',
-            address: 'Campus Address, AKNU Affiliated Zone',
-            pincode: '533001',
-            principalName: known?.name || 'Dr. K. Srinivas Rao',
-            principalMobile: known?.mobile || '9440123456',
-            principalEmail: `principal.${cleanId.toLowerCase()}@aknu.edu.in`,
-            hasHostel: false,
-            active: true,
-            createdAt: new Date().toISOString(),
-          };
-          mockDb.colleges.push(college);
-        } else if (known && (!college.principalName || college.principalName.startsWith('Principal ('))) {
-          college.principalName = known.name;
-          college.principalMobile = known.mobile;
-        }
-        user = {
-          id: `usr-col-${college.code.toLowerCase()}`,
-          email: college.principalEmail,
-          phone: college.principalMobile,
-          name: college.principalName,
-          role: 'COLLEGE_PRINCIPAL',
-          courseSection: 'ALL',
-          collegeId: college.id,
-          isActive: true,
-        };
-        mockDb.users.push(user);
-      }
     }
 
     if (!user) {
@@ -308,76 +267,9 @@ export class AuthService {
       }
     }
 
-    if (!college && !cleanId.includes('@')) {
-      const code = cleanId.toUpperCase();
-      if (mockDb.courses.length === 0) {
-        mockDb.courses.push(
-          {
-            id: 'crs-bsc-ds',
-            code: 'B.Sc-DS',
-            name: 'B.Sc Data Science & AI',
-            courseGroup: 'UG',
-            durationYears: 3,
-            degreeLevel: 'UG',
-            isComputer: true,
-            active: true,
-          },
-          {
-            id: 'crs-bcom-ca',
-            code: 'B.Com-CA',
-            name: 'B.Com Computer Applications',
-            courseGroup: 'UG',
-            durationYears: 3,
-            degreeLevel: 'UG',
-            isComputer: true,
-            active: true,
-          },
-          {
-            id: 'crs-mba',
-            code: 'M.B.A',
-            name: 'Master of Business Administration',
-            courseGroup: 'MBA_MCA',
-            durationYears: 2,
-            degreeLevel: 'PG',
-            isComputer: true,
-            active: true,
-          },
-        );
-      }
-
-      const known = KNOWN_PRINCIPALS[code];
-      college = {
-        id: `col-${cleanId.toLowerCase()}`,
-        code: code,
-        name: known?.collegeName || `Affiliated Degree College (${code})`,
-        type: 'UNAIDED',
-        isAutonomous: false,
-        location: 'RURAL',
-        district: 'East Godavari',
-        address: 'Campus Address, AKNU Affiliated Zone',
-        pincode: '533001',
-        principalName: known?.name || 'Dr. K. Srinivas Rao',
-        principalMobile: known?.mobile || '9440123456',
-        principalEmail: `principal.${cleanId.toLowerCase()}@aknu.edu.in`,
-        hasHostel: false,
-        active: true,
-        createdAt: new Date().toISOString(),
-        tempPassword: `Aknu@${code}`,
-        mustChangePassword: true,
-        courseIds: mockDb.courses.map((c) => c.id),
-      };
-      mockDb.colleges.push(college);
-    } else if (college) {
-      const known = KNOWN_PRINCIPALS[college.code];
-      if (known && (!college.principalName || college.principalName.startsWith('Principal ('))) {
-        college.principalName = known.name;
-        college.principalMobile = known.mobile;
-      }
-    }
-
     if (!college) {
       throw new BadRequestException(
-        `College with Code or Email "${identifier}" is not found in the registry. Please register the college first.`,
+        `College with Code or Email "${identifier}" is not found in the registry. Please register the college in the University portal first.`,
       );
     }
 

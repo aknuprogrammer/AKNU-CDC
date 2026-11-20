@@ -560,335 +560,51 @@ export class MockDatabase {
       },
     ];
 
-    // Seed Sample Colleges illustrating distinct Stream and Course Mappings
-    this.colleges = [
-      {
-        id: 'col-001',
-        code: '001',
-        name: 'Government College of Engineering & Technology (Autonomous)',
-        type: 'GOVERNMENT',
-        isAutonomous: true,
-        location: 'RURAL',
-        district: 'East Godavari',
-        address: 'Kateru Road, Rajahmundry',
-        pincode: '533105',
-        principalName: 'Dr. K. Srinivas Rao',
-        principalMobile: '9440123456',
-        principalEmail: 'principal.001@aknu.edu.in',
-        hasHostel: true,
-        active: true,
-        createdAt: new Date().toISOString(),
-        streams: ['UG'], // Offers only UG (specifically B.Tech programs only)
-        courseIds: ['crs-btech-cse', 'crs-btech-ece', 'crs-btech-civil'],
-        courseIntakes: [
-          {
-            courseId: 'crs-btech-cse',
-            courseCode: 'B.Tech-CSE',
-            courseName: 'B.Tech Computer Science & Engineering',
-            stream: 'UG',
-            degreeType: 'B.Tech',
-            branch: 'CSE',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-btech-ece',
-            courseCode: 'B.Tech-ECE',
-            courseName: 'B.Tech Electronics & Communication Engineering',
-            stream: 'UG',
-            degreeType: 'B.Tech',
-            branch: 'ECE',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-btech-civil',
-            courseCode: 'B.Tech-Civil',
-            courseName: 'B.Tech Civil Engineering',
-            stream: 'UG',
-            degreeType: 'B.Tech',
-            branch: 'Civil Engineering',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-        ],
-      },
-      {
-        id: 'col-002',
-        code: '002',
-        name: 'Aditya Degree & PG College for Women',
-        type: 'UNAIDED',
-        isAutonomous: false,
-        location: 'URBAN',
-        district: 'Kakinada',
-        address: 'Srinagar, Kakinada',
-        pincode: '533003',
-        principalName: 'Dr. P. Lakshmi Devi',
-        principalMobile: '9848123456',
-        principalEmail: 'principal.002@aknu.edu.in',
-        hasHostel: true,
-        active: true,
-        createdAt: new Date().toISOString(),
-        streams: ['UG', 'PG'], // Offers both UG and PG
-        courseIds: ['crs-bsc-ds', 'crs-bcom-ca', 'crs-mba'],
-        courseIntakes: [
-          {
-            courseId: 'crs-bsc-ds',
-            courseCode: 'B.Sc-DS',
-            courseName: 'B.Sc Data Science & AI',
-            stream: 'UG',
-            degreeType: 'B.Sc',
-            branch: 'Data Science & AI',
-            sanctionedIntake: 50,
-            convenorQuota: 35,
-            managementQuota: 15,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-bcom-ca',
-            courseCode: 'B.Com-CA',
-            courseName: 'B.Com Computer Applications',
-            stream: 'UG',
-            degreeType: 'B.Com',
-            branch: 'Computer Applications',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-mba',
-            courseCode: 'M.B.A',
-            courseName: 'Master of Business Administration',
-            stream: 'PG',
-            degreeType: 'M.B.A',
-            branch: 'Business Administration',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-        ],
-      },
-      {
-        id: 'col-003',
-        code: '003',
-        name: 'SKBR Degree College',
-        type: 'AIDED',
-        isAutonomous: false,
-        location: 'RURAL',
-        district: 'Dr. B.R. Ambedkar Konaseema',
-        address: 'Amalapuram Road',
-        pincode: '533201',
-        principalName: 'Dr. M. Satyanarayana',
-        principalMobile: '9440987654',
-        principalEmail: 'principal.003@aknu.edu.in',
-        hasHostel: false,
-        active: true,
-        createdAt: new Date().toISOString(),
-        streams: ['UG'], // Offers only UG
-        courseIds: ['crs-bsc-cs', 'crs-bcom-gen', 'crs-ba-hep'],
-        courseIntakes: [
-          {
-            courseId: 'crs-bsc-cs',
-            courseCode: 'B.Sc-CS',
-            courseName: 'B.Sc Computer Science',
-            stream: 'UG',
-            degreeType: 'B.Sc',
-            branch: 'Computer Science',
-            sanctionedIntake: 50,
-            convenorQuota: 35,
-            managementQuota: 15,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-bcom-gen',
-            courseCode: 'B.Com-Gen',
-            courseName: 'B.Com General',
-            stream: 'UG',
-            degreeType: 'B.Com',
-            branch: 'General',
-            sanctionedIntake: 60,
-            convenorQuota: 42,
-            managementQuota: 18,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-ba-hep',
-            courseCode: 'B.A-HEP',
-            courseName: 'B.A History, Economics & Politics',
-            stream: 'UG',
-            degreeType: 'B.A',
-            branch: 'History, Economics & Politics',
-            sanctionedIntake: 50,
-            convenorQuota: 35,
-            managementQuota: 15,
-            spotAdmission: 0,
-          },
-        ],
-      },
-      {
-        id: 'col-004',
-        code: '004',
-        name: 'GSKP College of Law',
-        type: 'UNAIDED',
-        isAutonomous: false,
-        location: 'URBAN',
-        district: 'West Godavari',
-        address: 'Bhimavaram',
-        pincode: '534201',
-        principalName: 'Dr. V. Prasad',
-        principalMobile: '9440112233',
-        principalEmail: 'principal.004@aknu.edu.in',
-        hasHostel: true,
-        active: true,
-        createdAt: new Date().toISOString(),
-        streams: ['LAW'], // Offers only LAW
-        courseIds: ['crs-llb-3y', 'crs-llm'],
-        courseIntakes: [
-          {
-            courseId: 'crs-llb-3y',
-            courseCode: 'LL.B-3Y',
-            courseName: 'Bachelor of Laws (3 Years)',
-            stream: 'LAW',
-            degreeType: 'LL.B',
-            branch: 'General Law',
-            sanctionedIntake: 120,
-            convenorQuota: 84,
-            managementQuota: 36,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-llm',
-            courseCode: 'LL.M',
-            courseName: 'Master of Laws (Constitutional Law)',
-            stream: 'LAW',
-            degreeType: 'LL.M',
-            branch: 'Constitutional Law',
-            sanctionedIntake: 30,
-            convenorQuota: 21,
-            managementQuota: 9,
-            spotAdmission: 0,
-          },
-        ],
-      },
-      {
-        id: 'col-005',
-        code: '005',
-        name: "St. Mary's College of Education",
-        type: 'AIDED',
-        isAutonomous: false,
-        location: 'RURAL',
-        district: 'East Godavari',
-        address: 'Peddapuram',
-        pincode: '533437',
-        principalName: 'Dr. K. Ranga Rao',
-        principalMobile: '9848223344',
-        principalEmail: 'principal.005@aknu.edu.in',
-        hasHostel: false,
-        active: true,
-        createdAt: new Date().toISOString(),
-        streams: ['EDUCATION'], // Offers only Education
-        courseIds: ['crs-bed', 'crs-med'],
-        courseIntakes: [
-          {
-            courseId: 'crs-bed',
-            courseCode: 'B.Ed',
-            courseName: 'Bachelor of Education',
-            stream: 'EDUCATION',
-            degreeType: 'B.Ed',
-            branch: 'Secondary Education',
-            sanctionedIntake: 100,
-            convenorQuota: 70,
-            managementQuota: 30,
-            spotAdmission: 0,
-          },
-          {
-            courseId: 'crs-med',
-            courseCode: 'M.Ed',
-            courseName: 'Master of Education',
-            stream: 'EDUCATION',
-            degreeType: 'M.Ed',
-            branch: 'Advanced Pedagogy',
-            sanctionedIntake: 50,
-            convenorQuota: 35,
-            managementQuota: 15,
-            spotAdmission: 0,
-          },
-        ],
-      },
-    ];
+    // 4. Colleges (Empty - add/upload dynamically)
+    this.colleges = [];
 
-    // Seed Sample Proceedings representing published orders for these colleges
-    this.proceedings = [
-      {
-        id: 'proc-001',
-        proceedingNumber: 'AKNU/CDC/AFFIL/2026-27/001',
-        academicYear: '2026-27',
-        collegeId: 'col-001',
-        courseGroupId: 'UG',
-        templateType: 'GRANT_AFFILIATION',
-        status: 'ISSUED',
-        subject: 'Grant of Permanent Affiliation & Binding Sanctioned Intake for 2026-27',
-        bodyTemplate: 'Order of Affiliation and Binding Cap of Sanctioned Intake for Engineering Programs.',
-        conditions: '1. Total admissions must not exceed the sanctioned intake of each program under any circumstances.',
-        qrVerificationCode: 'AKNU-PROC-2026-001-QR',
-        issuedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        items: [
-          { courseName: 'B.Tech Computer Science & Engineering', sanctionedIntake: 60, convenorQuota: 42, spotAdmission: 0, managementQuota: 18 },
-          { courseName: 'B.Tech Electronics & Communication Engineering', sanctionedIntake: 60, convenorQuota: 42, spotAdmission: 0, managementQuota: 18 },
-          { courseName: 'B.Tech Civil Engineering', sanctionedIntake: 60, convenorQuota: 42, spotAdmission: 0, managementQuota: 18 },
-        ],
-      },
-      {
-        id: 'proc-002',
-        proceedingNumber: 'AKNU/CDC/AFFIL/2026-27/002',
-        academicYear: '2026-27',
-        collegeId: 'col-002',
-        courseGroupId: 'UG',
-        templateType: 'GRANT_AFFILIATION',
-        status: 'ISSUED',
-        subject: 'Sanction of Academic Intake for UG & PG Programs 2026-27',
-        bodyTemplate: 'Approved intake capacity with binding seat matrix for B.Sc, B.Com, and MBA.',
-        conditions: 'Strict quota adherence required for CQ and MQ admissions.',
-        qrVerificationCode: 'AKNU-PROC-2026-002-QR',
-        issuedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        items: [
-          { courseName: 'B.Sc Data Science & AI', sanctionedIntake: 50, convenorQuota: 35, spotAdmission: 0, managementQuota: 15 },
-          { courseName: 'B.Com Computer Applications', sanctionedIntake: 60, convenorQuota: 42, spotAdmission: 0, managementQuota: 18 },
-          { courseName: 'Master of Business Administration', sanctionedIntake: 60, convenorQuota: 42, spotAdmission: 0, managementQuota: 18 },
-        ],
-      },
-    ];
-
-    // 4. Students (Empty - add/upload dynamically)
+    // 5. Students (Empty - add/upload dynamically)
     this.students = [];
 
-    // 5. Faculty (Empty - add dynamically)
+    // 6. Faculty (Empty - add dynamically)
     this.faculty = [];
 
-    // 6. Proceedings (Empty - draft and issue dynamically)
+    // 7. Proceedings (Empty - draft and issue dynamically)
     this.proceedings = [];
 
-    // 7. Demands (Empty - generate dynamically via pure Fee Engine)
+    // 8. Demands (Empty - generate dynamically via pure Fee Engine)
     this.demands = [];
 
-    // 8. Payments (Empty - pay dynamically)
+    // 9. Payments (Empty - pay dynamically)
     this.payments = [];
 
-    // 9. Workflow Queries (Empty - submit dynamically)
+    // 10. Workflow Queries (Empty - submit dynamically)
     this.workflowQueries = [];
 
-    // 10. Notifications (Empty - dispatch dynamically)
+    // 11. Notifications (Empty - dispatch dynamically)
     this.notifications = [];
+
+    // 12. Late Fee Waivers & Audit Logs (Empty)
+    this.lateFeeWaivers = [];
+    this.auditLogs = [];
+  }
+
+  public clearAllData(includeCourses: boolean = false) {
+    this.colleges = [];
+    this.students = [];
+    this.faculty = [];
+    this.proceedings = [];
+    this.demands = [];
+    this.payments = [];
+    this.workflowQueries = [];
+    this.auditLogs = [];
+    this.notifications = [];
+    this.lateFeeWaivers = [];
+    // Keep only University administrative accounts (Super Admin, Dean, Section Officers)
+    this.users = this.users.filter((u) => !u.collegeId && u.role !== 'COLLEGE_PRINCIPAL' && u.role !== 'COLLEGE_STAFF');
+    if (includeCourses) {
+      this.courses = [];
+    }
   }
 }
 

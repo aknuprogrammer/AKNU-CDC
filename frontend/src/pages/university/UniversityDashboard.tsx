@@ -15,6 +15,13 @@ import { api } from '../../api/client';
 
 const { Title, Text } = Typography;
 
+const formatINR = (amt?: number) => {
+  if (!amt || amt === 0) return '₹0';
+  if (amt >= 10000000) return `₹${(amt / 10000000).toFixed(2)} Cr`;
+  if (amt >= 100000) return `₹${(amt / 100000).toFixed(2)}L`;
+  return `₹${amt.toLocaleString()}`;
+};
+
 export const UniversityDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [collectionStats, setCollectionStats] = useState<any>(null);
@@ -85,14 +92,14 @@ export const UniversityDashboard: React.FC = () => {
           >
             <Statistic
               title="Affiliated Colleges"
-              value={collegeStats?.total || 402}
+              value={collegeStats?.total ?? 0}
               prefix={<BankOutlined style={{ color: '#002147' }} />}
               suffix={<Text type="secondary" style={{ fontSize: '12px' }}>Total</Text>}
             />
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-              <Tag color="cyan">Govt: {collegeStats?.govt || 42}</Tag>
-              <Tag color="blue">Aided: {collegeStats?.aided || 68}</Tag>
-              <Tag color="purple">Autonomous: {collegeStats?.autonomous || 18}</Tag>
+              <Tag color="cyan">Govt: {collegeStats?.govt ?? 0}</Tag>
+              <Tag color="blue">Aided: {collegeStats?.aided ?? 0}</Tag>
+              <Tag color="purple">Autonomous: {collegeStats?.autonomous ?? 0}</Tag>
             </div>
           </Card>
         </Col>
@@ -107,11 +114,11 @@ export const UniversityDashboard: React.FC = () => {
           >
             <Statistic
               title="Total Demanded (2026-27)"
-              value={collectionStats?.totalDemandedINR ? `₹${(collectionStats.totalDemandedINR / 100000).toFixed(2)}L` : '₹52.72L'}
+              value={formatINR(collectionStats?.totalDemandedINR)}
               prefix={<DollarOutlined style={{ color: '#D4AF37' }} />}
             />
             <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>
-              Demands Issued: <strong>{collectionStats?.totalDemandsCount || 402}</strong>
+              Demands Issued: <strong>{collectionStats?.totalDemandsCount ?? 0}</strong>
             </div>
           </Card>
         </Col>
@@ -126,13 +133,13 @@ export const UniversityDashboard: React.FC = () => {
           >
             <Statistic
               title="Online Realized Revenue"
-              value={collectionStats?.totalCollectedINR ? `₹${(collectionStats.totalCollectedINR / 100000).toFixed(2)}L` : '₹33.70L'}
+              value={formatINR(collectionStats?.totalCollectedINR)}
               valueStyle={{ color: '#52c41a' }}
               prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
             />
             <div style={{ marginTop: 8 }}>
               <Progress
-                percent={collectionStats?.collectionPercentage || 64}
+                percent={collectionStats?.collectionPercentage ?? 0}
                 size="small"
                 status="active"
                 strokeColor="#52c41a"
@@ -151,12 +158,12 @@ export const UniversityDashboard: React.FC = () => {
           >
             <Statistic
               title="Pending Balance / Dues"
-              value={collectionStats?.totalBalanceINR ? `₹${(collectionStats.totalBalanceINR / 100000).toFixed(2)}L` : '₹19.02L'}
+              value={formatINR(collectionStats?.totalBalanceINR)}
               valueStyle={{ color: '#f5222d' }}
               prefix={<AlertOutlined style={{ color: '#f5222d' }} />}
             />
             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
-              <Tag color="red">Defaulters: {collectionStats?.pendingCount || 1}</Tag>
+              <Tag color={collectionStats?.pendingCount > 0 ? 'red' : 'default'}>Defaulters: {collectionStats?.pendingCount ?? 0}</Tag>
               <Button type="link" size="small" onClick={() => navigate('/university/reports')} style={{ padding: 0 }}>
                 View Defaulters →
               </Button>
@@ -257,7 +264,7 @@ export const UniversityDashboard: React.FC = () => {
                 onClick={() => navigate('/university/colleges')}
                 style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               >
-                <span>Affiliated Colleges Register (~400)</span>
+                <span>Affiliated Colleges Register ({collegeStats?.total ?? 0})</span>
                 <ArrowRightOutlined />
               </Button>
 

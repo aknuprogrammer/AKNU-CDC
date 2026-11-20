@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/client';
 import { Proceeding } from '../../api/types';
+import { useSearchParams } from 'react-router-dom';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -37,6 +38,8 @@ export const CollegeProceedingsPage: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [intakeChangeModal, setIntakeChangeModal] = useState(false);
   const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
+  const targetId = searchParams.get('id');
 
   const loadProceedings = async () => {
     if (!college) return;
@@ -44,6 +47,13 @@ export const CollegeProceedingsPage: React.FC = () => {
     try {
       const res = await api.proceedings.list({ collegeId: college.id });
       setProceedings(res.data);
+      if (targetId) {
+        const found = res.data.find((p) => p.id === targetId || p.proceedingNumber === targetId);
+        if (found) {
+          setSelectedProc(found);
+          setDrawerOpen(true);
+        }
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,7 +63,7 @@ export const CollegeProceedingsPage: React.FC = () => {
 
   useEffect(() => {
     loadProceedings();
-  }, [college]);
+  }, [college, targetId]);
 
   const handleAcknowledge = async (id: string) => {
     try {

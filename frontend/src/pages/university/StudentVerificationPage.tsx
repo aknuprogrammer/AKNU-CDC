@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Card, Input, Select, Space, Tag, Row, Col, Typography, Button, message } from 'antd';
-import { SearchOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
+import { SearchOutlined, SafetyCertificateOutlined, FilePdfOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { Student, College, Course } from '../../api/types';
+import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
 
@@ -52,6 +53,89 @@ export const StudentVerificationPage: React.FC = () => {
       s.name.toLowerCase().includes(q)
     );
   });
+
+  const handleExportExcel = () => {
+    if (filteredStudents.length === 0) {
+      message.warning('No data to export');
+      return;
+    }
+    const rows = filteredStudents.map((s) => ({
+      'APAAR ID': s.apaarId,
+      'Admission No': s.admissionNo,
+      'Student Name': s.name,
+      'Father Name': s.fatherName,
+      'College': s.collegeName,
+      'Course': s.courseName || s.courseCode,
+      'Year of Study': s.yearOfStudy,
+      'Quota': s.quota,
+      'Category': s.category,
+      'Gender': s.gender,
+      'Status': s.status,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Students');
+    XLSX.writeFile(wb, 'students_export.xlsx');
+    message.success('Exported to Excel successfully!');
+  };
+
+  const handleExportPdf = () => {
+    if (filteredStudents.length === 0) {
+      message.warning('No data to export');
+      return;
+    }
+    const rows = filteredStudents
+      .map(
+        (s) =>
+          `<tr>
+            <td>${s.apaarId}</td>
+            <td>${s.admissionNo}</td>
+            <td>${s.name}</td>
+            <td>${s.collegeName}</td>
+            <td>${s.courseName || s.courseCode}</td>
+            <td>Year ${s.yearOfStudy}</td>
+            <td>${s.quota} Quota</td>
+            <td>${s.status}</td>
+          </tr>`,
+      )
+      .join('');
+    const html = `
+      <html>
+        <head>
+          <title>Student Data Export – AKNU CDC</title>
+          <style>
+            body { font-family: Arial, sans-serif; font-size: 12px; }
+            h2 { color: #002147; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th { background: #002147; color: #fff; padding: 6px 8px; text-align: left; }
+            td { border: 1px solid #ddd; padding: 5px 8px; }
+            tr:nth-child(even) { background: #f9f9f9; }
+          </style>
+        </head>
+        <body>
+          <h2>Enrolled Student Admissions &amp; APAAR ID Registry</h2>
+          <p>Total Records: ${filteredStudents.length}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>APAAR ID</th><th>Admission No</th><th>Student Name</th>
+                <th>College</th><th>Course</th><th>Year</th><th>Quota</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>`;
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      win.print();
+    } else {
+      message.error('Popup blocked – please allow popups for this site');
+    }
+  };
 
   return (
     <div>
@@ -116,6 +200,24 @@ export const StudentVerificationPage: React.FC = () => {
                 { label: '4th Year', value: 4 },
               ]}
             />
+          </Col>
+          <Col xs={24} md={5}>
+            <Space>
+              <Button
+                icon={<FilePdfOutlined />}
+                onClick={handleExportPdf}
+                style={{ background: '#d32f2f', color: '#fff', borderColor: '#d32f2f' }}
+              >
+                Export PDF
+              </Button>
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={handleExportExcel}
+                style={{ background: '#217346', color: '#fff', borderColor: '#217346' }}
+              >
+                Export Excel
+              </Button>
+            </Space>
           </Col>
         </Row>
 

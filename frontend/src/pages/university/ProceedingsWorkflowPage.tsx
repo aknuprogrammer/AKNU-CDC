@@ -675,6 +675,17 @@ export const ProceedingsWorkflowPage: React.FC = () => {
           <Form.Item name="conditions" label="Conditions">
             <TextArea rows={3} />
           </Form.Item>
+
+          <Form.Item name="attachedPdf" label="Add / Upload PDF">
+            <Upload
+              accept=".pdf"
+              maxCount={1}
+              beforeUpload={() => false}
+              listType="text"
+            >
+              <Button icon={<UploadOutlined />}>Select PDF File</Button>
+            </Upload>
+          </Form.Item>
         </Form>
       </Modal>
 

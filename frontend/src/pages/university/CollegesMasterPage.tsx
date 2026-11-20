@@ -586,6 +586,16 @@ export const CollegesMasterPage: React.FC = () => {
     }
   };
 
+  const handleClearAllData = async () => {
+    try {
+      const res = await api.colleges.clearAll(false);
+      message.success(res.data.message || 'All college data cleared successfully! Ready for fresh entries.');
+      loadColleges();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || err.message || 'Failed to clear data');
+    }
+  };
+
   const openEditCollegeModal = (record: College) => {
     setEditingCollege(record);
     const isNamePhone = /^\+?\d[\d\s\-]{7,15}$/.test((record.principalName || '').trim());
@@ -1844,6 +1854,18 @@ export const CollegesMasterPage: React.FC = () => {
           >
             Add College
           </Button>
+          <Popconfirm
+            title="Clear all data?"
+            description="Are you sure you want to clear all colleges, students, demands, and proceedings to start fresh?"
+            onConfirm={handleClearAllData}
+            okText="Yes, Clear All"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger size="middle" icon={<DeleteOutlined />}>
+              Clear All Data
+            </Button>
+          </Popconfirm>
         </Space>
       </div>
 
@@ -1967,10 +1989,9 @@ export const CollegesMasterPage: React.FC = () => {
                         allowClear
                         value={typeFilter}
                         style={{ width: 170 }}
-                        onChange={setTypeFilter}
-                        options={categoryOptions}
+                        onChange={(val) => setTypeFilter(val || undefined)}
+                        options={[{ label: 'All', value: '' }, ...categoryOptions]}
                         notFoundContent="No categories created"
-                        disabled={categoryOptions.length === 0}
                       />
 
                       <Select
@@ -1978,10 +1999,9 @@ export const CollegesMasterPage: React.FC = () => {
                         allowClear
                         value={districtFilter}
                         style={{ width: 180 }}
-                        onChange={setDistrictFilter}
-                        options={districtOptions}
+                        onChange={(val) => setDistrictFilter(val || undefined)}
+                        options={[{ label: 'All', value: '' }, ...districtOptions]}
                         notFoundContent="No districts created"
-                        disabled={districtOptions.length === 0}
                       />
 
                       <Select
@@ -1989,10 +2009,9 @@ export const CollegesMasterPage: React.FC = () => {
                         allowClear
                         value={locationFilter}
                         style={{ width: 170 }}
-                        onChange={setLocationFilter}
-                        options={locationOptions}
+                        onChange={(val) => setLocationFilter(val || undefined)}
+                        options={[{ label: 'All', value: '' }, ...locationOptions]}
                         notFoundContent="No locations created"
-                        disabled={locationOptions.length === 0}
                       />
 
                       {(collegeSearch || typeFilter || districtFilter || locationFilter) && (

@@ -54,16 +54,16 @@ export class CollegesService {
     return result.map((c) => {
       const courses = (c.courseIds && c.courseIds.length > 0)
         ? mockDb.courses
-            .filter((crs) => c.courseIds?.includes(crs.id) || c.courseIds?.includes(crs.code))
-            .map((crs) => {
-              const ci = (c.courseIntakes || []).find((item) => item.courseId === crs.id || item.courseCode === crs.code);
-              return {
-                ...crs,
-                sanctionedIntake: ci?.sanctionedIntake || crs.defaultIntake || 60,
-                convenorQuota: ci?.convenorQuota || Math.round((ci?.sanctionedIntake || crs.defaultIntake || 60) * 0.7),
-                managementQuota: ci?.managementQuota || Math.round((ci?.sanctionedIntake || crs.defaultIntake || 60) * 0.3),
-              };
-            })
+          .filter((crs) => c.courseIds?.includes(crs.id) || c.courseIds?.includes(crs.code))
+          .map((crs) => {
+            const ci = (c.courseIntakes || []).find((item) => item.courseId === crs.id || item.courseCode === crs.code);
+            return {
+              ...crs,
+              sanctionedIntake: ci?.sanctionedIntake || crs.defaultIntake || 60,
+              convenorQuota: ci?.convenorQuota || Math.round((ci?.sanctionedIntake || crs.defaultIntake || 60) * 0.7),
+              managementQuota: ci?.managementQuota || Math.round((ci?.sanctionedIntake || crs.defaultIntake || 60) * 0.3),
+            };
+          })
         : [];
       return {
         ...c,
@@ -100,16 +100,16 @@ export class CollegesService {
     // Resolve full course objects for courses offered by this college
     const courses = (college.courseIds && college.courseIds.length > 0)
       ? mockDb.courses
-          .filter((c) => college.courseIds?.includes(c.id) || college.courseIds?.includes(c.code))
-          .map((c) => {
-            const ci = (college.courseIntakes || []).find((item) => item.courseId === c.id || item.courseCode === c.code);
-            return {
-              ...c,
-              sanctionedIntake: ci?.sanctionedIntake || c.defaultIntake || 60,
-              convenorQuota: ci?.convenorQuota || Math.round((ci?.sanctionedIntake || c.defaultIntake || 60) * 0.7),
-              managementQuota: ci?.managementQuota || Math.round((ci?.sanctionedIntake || c.defaultIntake || 60) * 0.3),
-            };
-          })
+        .filter((c) => college.courseIds?.includes(c.id) || college.courseIds?.includes(c.code))
+        .map((c) => {
+          const ci = (college.courseIntakes || []).find((item) => item.courseId === c.id || item.courseCode === c.code);
+          return {
+            ...c,
+            sanctionedIntake: ci?.sanctionedIntake || c.defaultIntake || 60,
+            convenorQuota: ci?.convenorQuota || Math.round((ci?.sanctionedIntake || c.defaultIntake || 60) * 0.7),
+            managementQuota: ci?.managementQuota || Math.round((ci?.sanctionedIntake || c.defaultIntake || 60) * 0.3),
+          };
+        })
       : [];
 
     return {
@@ -146,8 +146,8 @@ export class CollegesService {
     const parsedIntakesMap: Record<string, number> = {};
 
     const rawCourseStr = (typeof (data as any).programsStr === 'string' && (data as any).programsStr) ||
-                         (typeof (data as any).programs === 'string' && (data as any).programs) ||
-                         (typeof (data as any).courses === 'string' && (data as any).courses);
+      (typeof (data as any).programs === 'string' && (data as any).programs) ||
+      (typeof (data as any).courses === 'string' && (data as any).courses);
 
     if (Array.isArray(data.courseIds)) {
       courseIds = data.courseIds;
@@ -182,22 +182,22 @@ export class CollegesService {
     const courseIntakes = data.courseIntakes && data.courseIntakes.length > 0
       ? data.courseIntakes
       : resolvedCourses.map((crs) => {
-          const intake = parsedIntakesMap[crs.id] || parsedIntakesMap[crs.code] || crs.defaultIntake || 60;
-          const cq = Math.round(intake * 0.7);
-          const mq = intake - cq;
-          return {
-            courseId: crs.id,
-            courseCode: crs.code,
-            courseName: crs.name,
-            stream: crs.stream || crs.courseGroup,
-            degreeType: crs.degreeType,
-            branch: crs.branch,
-            sanctionedIntake: intake,
-            convenorQuota: cq,
-            managementQuota: mq,
-            spotAdmission: 0,
-          };
-        });
+        const intake = parsedIntakesMap[crs.id] || parsedIntakesMap[crs.code] || crs.defaultIntake || 60;
+        const cq = Math.round(intake * 0.7);
+        const mq = intake - cq;
+        return {
+          courseId: crs.id,
+          courseCode: crs.code,
+          courseName: crs.name,
+          stream: crs.stream || crs.courseGroup,
+          degreeType: crs.degreeType,
+          branch: crs.branch,
+          sanctionedIntake: intake,
+          convenorQuota: cq,
+          managementQuota: mq,
+          spotAdmission: 0,
+        };
+      });
 
     const streams = data.streams && data.streams.length > 0
       ? data.streams
@@ -365,10 +365,14 @@ export class CollegesService {
 
     return {
       success: true,
-      totalRows: rows.length,
+      totalReceived: rows.length,
+      importedCount: mappedCoursesCount,
       updatedCollegesCount,
-      mappedCoursesCount,
       errorsCount: errors.length,
+      summary: Array.from(affectedColleges).map((colId) => {
+        const col = mockDb.colleges.find((c) => c.id === colId);
+        return { collegeId: colId, collegeName: col?.name, mappedCourses: col?.courseIds?.length || 0 };
+      }),
       errors,
     };
   }
@@ -412,6 +416,16 @@ export class CollegesService {
     }
     const removed = mockDb.colleges.splice(index, 1)[0];
     return { success: true, removed };
+  }
+
+  clearAll(includeCourses: boolean = false) {
+    mockDb.clearAllData(includeCourses);
+    return {
+      success: true,
+      message: 'All colleges, students, faculty, proceedings, demands, and payments have been completely cleared.',
+      collegesCount: mockDb.colleges.length,
+      studentsCount: mockDb.students.length,
+    };
   }
 
   getStats() {

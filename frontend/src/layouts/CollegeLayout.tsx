@@ -24,6 +24,9 @@ import {
   ExperimentOutlined,
   BankOutlined,
   FileDoneOutlined,
+  UsergroupAddOutlined,
+  TeamOutlined,
+  CreditCardOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +83,31 @@ export const CollegeLayout: React.FC = () => {
       key: '/college/dashboard',
       icon: <DashboardOutlined style={{ color: '#f1c40f' }} />,
       label: <Link to="/college/dashboard">College Dashboard</Link>,
+    },
+    {
+      key: '/college/proceedings',
+      icon: <SafetyCertificateOutlined style={{ color: '#52c41a' }} />,
+      label: <Link to="/college/proceedings" style={{ fontWeight: 600 }}>Official Proceedings</Link>,
+    },
+    {
+      key: '/college/fees',
+      icon: <DollarOutlined style={{ color: '#faad14' }} />,
+      label: <Link to="/college/fees" style={{ fontWeight: 600 }}>Affiliation Fees & Demands</Link>,
+    },
+    {
+      key: '/college/students',
+      icon: <UsergroupAddOutlined style={{ color: '#1890ff' }} />,
+      label: <Link to="/college/students">Admitted Students</Link>,
+    },
+    {
+      key: '/college/seat-matrix',
+      icon: <ApartmentOutlined style={{ color: '#13c2c2' }} />,
+      label: <Link to="/college/seat-matrix">Sanctioned Seat Matrix</Link>,
+    },
+    {
+      key: '/college/faculty',
+      icon: <TeamOutlined style={{ color: '#b37feb' }} />,
+      label: <Link to="/college/faculty">Teaching Faculty</Link>,
     },
     // Stream-Specific Navigation (ONLY for streams offered by this college)
     ...(offeredStreams.length > 0

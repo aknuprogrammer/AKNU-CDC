@@ -39,6 +39,12 @@ export class CollegesController {
     return this.collegesService.bulkSeatMatrix(rows);
   }
 
+  @Post('clear-all')
+  @ApiOperation({ summary: 'Clear all colleges and related data for a fresh start' })
+  clearAll(@Body() body?: { includeCourses?: boolean }) {
+    return this.collegesService.clearAll(body?.includeCourses);
+  }
+
   @Get(':idOrCode')
   @ApiOperation({ summary: 'Get single college details with courses, demands, and proceedings' })
   findOne(@Param('idOrCode') idOrCode: string) {

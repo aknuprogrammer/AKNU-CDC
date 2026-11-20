@@ -119,6 +119,8 @@ export const api = {
         summary: any[];
         errors: { row: number; error: string }[];
       }>('/colleges/bulk-seat-matrix', { rows }),
+    clearAll: (includeCourses?: boolean) =>
+      apiClient.post<{ success: boolean; message: string; collegesCount: number; studentsCount: number }>('/colleges/clear-all', { includeCourses }),
   },
 
   // Courses
