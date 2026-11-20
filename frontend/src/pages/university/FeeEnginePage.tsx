@@ -33,7 +33,7 @@ const { Title, Text, Paragraph } = Typography;
 
 export const FeeEnginePage: React.FC = () => {
   const [colleges, setColleges] = useState<College[]>([]);
-  const [selectedCollegeId, setSelectedCollegeId] = useState<string>('col-001');
+  const [selectedCollegeId, setSelectedCollegeId] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<string>('UG');
   const [includeInspection, setIncludeInspection] = useState<boolean>(true);
   const [includeHostel, setIncludeHostel] = useState<boolean>(true);
@@ -55,9 +55,7 @@ export const FeeEnginePage: React.FC = () => {
       ]);
       setColleges(colRes.data);
       setDemands(dmdRes.data);
-      if (colRes.data.length > 0) {
-        setSelectedCollegeId(colRes.data[0].id);
-      }
+      setSelectedCollegeId(colRes.data[0]?.id || '');
     } catch (err) {
       console.error(err);
     } finally {
@@ -70,7 +68,7 @@ export const FeeEnginePage: React.FC = () => {
   }, []);
 
   const handleCalculatePreview = async () => {
-    if (!selectedCollegeId) return;
+    if (!selectedCollegeId || !colleges.some((college) => college.id === selectedCollegeId)) return;
     setLoadingPreview(true);
     try {
       const res = await api.fees.preview({
@@ -91,13 +89,13 @@ export const FeeEnginePage: React.FC = () => {
 
   // Run calculation preview on load or change
   useEffect(() => {
-    if (selectedCollegeId) {
+    if (selectedCollegeId && colleges.some((college) => college.id === selectedCollegeId)) {
       handleCalculatePreview();
     }
-  }, [selectedCollegeId, selectedGroup, includeInspection, includeHostel]);
+  }, [selectedCollegeId, selectedGroup, includeInspection, includeHostel, colleges]);
 
   const handleGenerateDemand = async () => {
-    if (!selectedCollegeId) return;
+    if (!selectedCollegeId || !colleges.some((college) => college.id === selectedCollegeId)) return;
     setGeneratingDemand(true);
     try {
       const res = await api.fees.generateDemand({
@@ -129,6 +127,16 @@ export const FeeEnginePage: React.FC = () => {
         </Text>
       </div>
 
+      {!loadingDemands && colleges.length === 0 && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="No colleges are available for fee calculation yet."
+          description="Add a college in Colleges Master first. The fee preview and demand generator will be available once a college is registered."
+        />
+      )}
+
       <Tabs
         defaultActiveKey="preview"
         items={[
@@ -151,6 +159,8 @@ export const FeeEnginePage: React.FC = () => {
                         style={{ width: '100%' }}
                         value={selectedCollegeId}
                         onChange={setSelectedCollegeId}
+                        disabled={colleges.length === 0}
+                        placeholder="Select a registered college"
                         options={colleges.map((c) => ({
                           label: `[${c.code}] ${c.name} (${c.location})`,
                           value: c.id,
@@ -163,6 +173,7 @@ export const FeeEnginePage: React.FC = () => {
                         style={{ width: '100%' }}
                         value={selectedGroup}
                         onChange={setSelectedGroup}
+                        disabled={colleges.length === 0}
                         options={[
                           { label: 'UG (Undergraduate 4Y NEP)', value: 'UG' },
                           { label: 'PG (Postgraduate MSc/MA/MCom)', value: 'PG' },
@@ -191,6 +202,7 @@ export const FeeEnginePage: React.FC = () => {
                         type="primary"
                         icon={<FileProtectOutlined />}
                         loading={generatingDemand}
+                        disabled={!selectedCollegeId || colleges.length === 0}
                         onClick={handleGenerateDemand}
                         style={{ background: '#52c41a', border: 'none', fontWeight: 600 }}
                       >

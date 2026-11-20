@@ -89,11 +89,11 @@ export const CollegeLayout: React.FC = () => {
       icon: <SafetyCertificateOutlined style={{ color: '#52c41a' }} />,
       label: <Link to="/college/proceedings" style={{ fontWeight: 600 }}>Official Proceedings</Link>,
     },
-    {
-      key: '/college/fees',
-      icon: <DollarOutlined style={{ color: '#faad14' }} />,
-      label: <Link to="/college/fees" style={{ fontWeight: 600 }}>Affiliation Fees & Demands</Link>,
-    },
+    // {
+    //   key: '/college/fees',
+    //   icon: <DollarOutlined style={{ color: '#faad14' }} />,
+    //   label: <Link to="/college/fees" style={{ fontWeight: 600 }}>Affiliation Fees & Demands</Link>,
+    // },
     {
       key: '/college/students',
       icon: <UsergroupAddOutlined style={{ color: '#1890ff' }} />,
@@ -104,11 +104,11 @@ export const CollegeLayout: React.FC = () => {
       icon: <ApartmentOutlined style={{ color: '#13c2c2' }} />,
       label: <Link to="/college/seat-matrix">Sanctioned Seat Matrix</Link>,
     },
-    {
-      key: '/college/faculty',
-      icon: <TeamOutlined style={{ color: '#b37feb' }} />,
-      label: <Link to="/college/faculty">Teaching Faculty</Link>,
-    },
+    // {
+    //   key: '/college/faculty',
+    //   icon: <TeamOutlined style={{ color: '#b37feb' }} />,
+    //   label: <Link to="/college/faculty">Teaching Faculty</Link>,
+    // },
     // Stream-Specific Navigation (ONLY for streams offered by this college)
     ...(offeredStreams.length > 0
       ? offeredStreams.map((st) => {
