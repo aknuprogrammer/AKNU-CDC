@@ -1655,10 +1655,10 @@ export const CollegesMasterPage: React.FC = () => {
       rowObj._error = !rowObj.collegeCode
         ? 'Missing College Code'
         : !(rowObj.courseCode || rowObj.courseName)
-        ? 'Missing Course'
-        : !rowObj.sanctionedIntake
-        ? 'Invalid Intake'
-        : null;
+          ? 'Missing Course'
+          : !rowObj.sanctionedIntake
+            ? 'Invalid Intake'
+            : null;
 
       rows.push(rowObj);
     }
@@ -1870,390 +1870,390 @@ export const CollegesMasterPage: React.FC = () => {
       </div>
 
       <div>
-                {/* Sleek Compact Stats Strip */}
-                <Card
-                  size="small"
+        {/* Sleek Compact Stats Strip */}
+        <Card
+          size="small"
+          style={{
+            borderRadius: '8px',
+            marginBottom: 12,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            background: '#ffffff',
+            border: '1px solid #eef0f2',
+          }}
+          styles={{ body: { padding: '10px 16px' } }}
+        >
+          <Row gutter={[12, 8]} align="middle" justify="space-between">
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
                   style={{
+                    width: 36,
+                    height: 36,
                     borderRadius: '8px',
-                    marginBottom: 12,
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                    background: '#ffffff',
-                    border: '1px solid #eef0f2',
+                    background: 'rgba(0, 33, 71, 0.08)',
+                    color: '#002147',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '18px',
                   }}
-                  styles={{ body: { padding: '10px 16px' } }}
                 >
-                  <Row gutter={[12, 8]} align="middle" justify="space-between">
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '8px',
-                            background: 'rgba(0, 33, 71, 0.08)',
-                            color: '#002147',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '18px',
-                          }}
-                        >
-                          <BankOutlined />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Total Colleges</div>
-                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#002147', lineHeight: 1.1 }}>{colleges.length}</div>
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
-                        <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Government</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#096dd9' }}>
-                          {colleges.filter((c) => c.type === 'GOVERNMENT').length}
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
-                        <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Aided</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#389e0d' }}>
-                          {colleges.filter((c) => c.type === 'AIDED').length}
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
-                        <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Unaided / Private</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#d48806' }}>
-                          {colleges.filter((c) => c.type === 'UNAIDED').length}
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
-                        <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Autonomous</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#722ed1' }}>
-                          {colleges.filter((c) => c.isAutonomous).length}
-                        </div>
-                      </div>
-                    </Col>
-
-                    <Col xs={12} sm={8} md={4}>
-                      <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
-                        <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>With Hostels</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#c41d7f' }}>
-                          {colleges.filter((c) => c.hasHostel).length}
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-
-                {/* Main Unified Colleges Register Card */}
-                <Card
-                  style={{
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
-                    border: '1px solid #eef0f2',
-                  }}
-                  styles={{ body: { padding: '16px' } }}
-                >
-                  {/* Integrated Filter Bar */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: 10,
-                      marginBottom: 14,
-                    }}
-                  >
-                    <Space wrap size="small">
-                      <Input
-                        placeholder="Search code, name, principal, district..."
-                        prefix={<SearchOutlined style={{ color: '#aaa' }} />}
-                        value={collegeSearch}
-                        onChange={(e) => setCollegeSearch(e.target.value)}
-                        style={{ width: 300 }}
-                        allowClear
-                      />
-
-                      <Select
-                        placeholder={categoryOptions.length === 0 ? 'Category (None created)' : 'Category'}
-                        allowClear
-                        value={typeFilter}
-                        style={{ width: 170 }}
-                        onChange={(val) => setTypeFilter(val || undefined)}
-                        options={[{ label: 'All', value: '' }, ...categoryOptions]}
-                        notFoundContent="No categories created"
-                      />
-
-                      <Select
-                        placeholder={districtOptions.length === 0 ? 'District (None created)' : 'District'}
-                        allowClear
-                        value={districtFilter}
-                        style={{ width: 180 }}
-                        onChange={(val) => setDistrictFilter(val || undefined)}
-                        options={[{ label: 'All', value: '' }, ...districtOptions]}
-                        notFoundContent="No districts created"
-                      />
-
-                      <Select
-                        placeholder={locationOptions.length === 0 ? 'Location (None created)' : 'Location'}
-                        allowClear
-                        value={locationFilter}
-                        style={{ width: 170 }}
-                        onChange={(val) => setLocationFilter(val || undefined)}
-                        options={[{ label: 'All', value: '' }, ...locationOptions]}
-                        notFoundContent="No locations created"
-                      />
-
-                      {(collegeSearch || typeFilter || districtFilter || locationFilter) && (
-                        <Button icon={<ReloadOutlined />} onClick={resetCollegeFilters}>
-                          Clear
-                        </Button>
-                      )}
-                    </Space>
-
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      Showing <strong>{filteredColleges.length}</strong> of {colleges.length} colleges
-                    </Text>
-                  </div>
-
-                  {/* Colleges Table */}
-                  <Table
-                    dataSource={filteredColleges}
-                    rowKey="id"
-                    loading={collegesLoading}
-                    pagination={{ pageSize: 10, showSizeChanger: true, size: 'small' }}
-                    scroll={{ x: 1300 }}
-                    size="middle"
-                    columns={[
-                      {
-                        title: 'Code',
-                        dataIndex: 'code',
-                        key: 'code',
-                        width: 85,
-                        render: (code) => (
-                          <Tag
-                            color="blue"
-                            style={{ fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}
-                          >
-                            {code}
-                          </Tag>
-                        ),
-                      },
-                      {
-                        title: 'Affiliated College Name',
-                        dataIndex: 'name',
-                        key: 'name',
-                        render: (name, record) => (
-                          <div>
-                            <div style={{ fontWeight: 600, color: '#002147', fontSize: '13px' }}>{name}</div>
-                            <div style={{ fontSize: '11px', color: '#888' }}>
-                              {record.address || record.district}
-                            </div>
-                          </div>
-                        ),
-                      },
-                      {
-                        title: 'Category',
-                        dataIndex: 'type',
-                        key: 'type',
-                        width: 120,
-                        render: (type) => {
-                          const colors: Record<string, string> = {
-                            GOVERNMENT: 'cyan',
-                            AIDED: 'green',
-                            UNAIDED: 'orange',
-                          };
-                          return <Tag color={colors[type] || 'default'}>{type}</Tag>;
-                        },
-                      },
-                      {
-                        title: 'District & Area',
-                        key: 'district',
-                        width: 170,
-                        render: (_, record) => (
-                          <div>
-                            <div style={{ fontSize: '12px', fontWeight: 500 }}>{record.district}</div>
-                            <Tag color="geekblue" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
-                              {record.location}
-                            </Tag>
-                          </div>
-                        ),
-                      },
-                      {
-                        title: 'Tags',
-                        key: 'tags',
-                        width: 130,
-                        render: (_, record) => (
-                          <Space size={2} direction="vertical">
-                            {record.isAutonomous && (
-                              <Tag color="purple" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
-                                AUTONOMOUS
-                              </Tag>
-                            )}
-                            {record.hasHostel && (
-                              <Tag color="gold" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
-                                HOSTEL
-                              </Tag>
-                            )}
-                          </Space>
-                        ),
-                      },
-                      {
-                        title: 'Academic Streams & Sanctioned Programs',
-                        key: 'courses',
-                        width: 250,
-                        render: (_, record) => {
-                          const collegeCourses = record.courses && record.courses.length > 0
-                            ? record.courses
-                            : (record.courseIds && record.courseIds.length > 0)
-                              ? courses.filter((c) => record.courseIds?.includes(c.id) || record.courseIds?.includes(c.code))
-                              : [];
-
-                          const colStreams = record.streams && record.streams.length > 0
-                            ? record.streams
-                            : record.courseIntakes && record.courseIntakes.length > 0
-                              ? Array.from(new Set(record.courseIntakes.map((ci) => ci.stream).filter(Boolean)))
-                              : collegeCourses.map((c: any) => c.stream || c.courseGroup || 'UG');
-                          const uniqueStreams = Array.from(new Set(colStreams));
-
-                          const totalSeats = record.courseIntakes && record.courseIntakes.length > 0
-                            ? record.courseIntakes.reduce((sum, ci) => sum + (ci.sanctionedIntake || 0), 0)
-                            : collegeCourses.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || c.defaultIntake || 60), 0);
-
-                          const streamColors: Record<string, string> = {
-                            UG: 'blue',
-                            PG: 'green',
-                            LAW: 'volcano',
-                            EDUCATION: 'purple',
-                          };
-
-                          if (collegeCourses.length === 0 && uniqueStreams.length === 0) {
-                            return <span style={{ color: '#aaa', fontSize: '11px', fontStyle: 'italic' }}>No programs mapped</span>;
-                          }
-
-                          return (
-                            <div>
-                              {uniqueStreams.length > 0 && (
-                                <div style={{ marginBottom: 4 }}>
-                                  <Space size={[2, 2]} wrap>
-                                    {uniqueStreams.map((st) => (
-                                      <Tag
-                                        key={st}
-                                        color={streamColors[st] || 'geekblue'}
-                                        style={{ fontSize: '10px', fontWeight: 800, padding: '0 5px', margin: 0 }}
-                                      >
-                                        {st}
-                                      </Tag>
-                                    ))}
-                                  </Space>
-                                </div>
-                              )}
-                              <Tooltip
-                                title={
-                                  <div style={{ fontSize: '11px' }}>
-                                    <div style={{ fontWeight: 700, marginBottom: 4 }}>Sanctioned Programs:</div>
-                                    {(record.courseIntakes?.length ? record.courseIntakes : collegeCourses).map((c: any) => (
-                                      <div key={c.courseId || c.id || c.code}>
-                                        • {c.courseName || c.name} ({c.courseCode || c.code}): <strong>{c.sanctionedIntake || c.defaultIntake || 60} Seats</strong>
-                                      </div>
-                                    ))}
-                                  </div>
-                                }
-                              >
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#002147', cursor: 'pointer' }}>
-                                  {collegeCourses.length || record.courseIntakes?.length || 0} Programs • <Tag color="cyan" style={{ fontWeight: 700, marginLeft: 2 }}>{totalSeats} Seats</Tag>
-                                </span>
-                              </Tooltip>
-                            </div>
-                          );
-                        },
-                      },
-                      {
-                        title: 'Principal Contact',
-                        key: 'contact',
-                        width: 220,
-                        render: (_, record) => {
-                          const isNamePhone = /^\+?\d[\d\s\-]{7,15}$/.test((record.principalName || '').trim());
-                          const isPlaceholder = (record.principalName || '').startsWith('Principal (');
-                          const known = KNOWN_PRINCIPALS[record.code];
-                          const displayName = (known && (isNamePhone || isPlaceholder || !record.principalName))
-                            ? known.name
-                            : isNamePhone
-                              ? (known?.name || `Dr. Principal`)
-                              : (record.principalName || known?.name || `Dr. Principal (${record.code})`);
-                          const displayMobile = isNamePhone
-                            ? record.principalName
-                            : (record.principalMobile || known?.mobile);
-                          return (
-                            <div style={{ fontSize: '12px' }}>
-                              <div style={{ fontWeight: 600, color: '#002147' }}>{displayName}</div>
-                              {displayMobile && (
-                                <div style={{ color: '#555', fontSize: '11px', fontWeight: 500 }}>{displayMobile}</div>
-                              )}
-                              {record.principalEmail && (
-                                <div style={{ color: '#888', fontSize: '10px' }}>{record.principalEmail}</div>
-                              )}
-                            </div>
-                          );
-                        },
-                      },
-                      {
-                        title: 'Actions',
-                        key: 'actions',
-                        width: 130,
-                        fixed: 'right',
-                        render: (_, record) => (
-                          <Space size={2}>
-                            <Tooltip title="View Details">
-                              <Button
-                                type="text"
-                                size="small"
-                                icon={<EyeOutlined style={{ color: '#002147' }} />}
-                                onClick={() => handleViewCollege(record.id)}
-                              />
-                            </Tooltip>
-                            <Tooltip title="Edit College">
-                              <Button
-                                type="text"
-                                size="small"
-                                icon={<EditOutlined style={{ color: '#1890ff' }} />}
-                                onClick={() => openEditCollegeModal(record)}
-                              />
-                            </Tooltip>
-                            <Tooltip title="Delete College">
-                              <Popconfirm
-                                title="Delete College"
-                                description={`Are you sure you want to delete ${record.name}?`}
-                                okText="Delete"
-                                cancelText="Cancel"
-                                okButtonProps={{ danger: true }}
-                                onConfirm={() => handleDeleteCollege(record.id)}
-                              >
-                                <Button
-                                  type="text"
-                                  danger
-                                  size="small"
-                                  icon={<DeleteOutlined />}
-                                />
-                              </Popconfirm>
-                            </Tooltip>
-                          </Space>
-                        ),
-                      },
-                    ]}
-                  />
-                </Card>
+                  <BankOutlined />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Total Colleges</div>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#002147', lineHeight: 1.1 }}>{colleges.length}</div>
+                </div>
               </div>
+            </Col>
+
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Government</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#096dd9' }}>
+                  {colleges.filter((c) => c.type === 'GOVERNMENT').length}
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Aided</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#389e0d' }}>
+                  {colleges.filter((c) => c.type === 'AIDED').length}
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Unaided / Private</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#d48806' }}>
+                  {colleges.filter((c) => c.type === 'UNAIDED').length}
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>Autonomous</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#722ed1' }}>
+                  {colleges.filter((c) => c.isAutonomous).length}
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={12} sm={8} md={4}>
+              <div style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: 12 }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600 }}>With Hostels</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#c41d7f' }}>
+                  {colleges.filter((c) => c.hasHostel).length}
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Main Unified Colleges Register Card */}
+        <Card
+          style={{
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+            border: '1px solid #eef0f2',
+          }}
+          styles={{ body: { padding: '16px' } }}
+        >
+          {/* Integrated Filter Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            <Space wrap size="small">
+              <Input
+                placeholder="Search code, name, principal, district..."
+                prefix={<SearchOutlined style={{ color: '#aaa' }} />}
+                value={collegeSearch}
+                onChange={(e) => setCollegeSearch(e.target.value)}
+                style={{ width: 300 }}
+                allowClear
+              />
+
+              <Select
+                placeholder={categoryOptions.length === 0 ? 'Category (None created)' : 'Category'}
+                allowClear
+                value={typeFilter}
+                style={{ width: 170 }}
+                onChange={(val) => setTypeFilter(val || undefined)}
+                options={[{ label: 'All', value: '' }, ...categoryOptions]}
+                notFoundContent="No categories created"
+              />
+
+              <Select
+                placeholder={districtOptions.length === 0 ? 'District (None created)' : 'District'}
+                allowClear
+                value={districtFilter}
+                style={{ width: 180 }}
+                onChange={(val) => setDistrictFilter(val || undefined)}
+                options={[{ label: 'All', value: '' }, ...districtOptions]}
+                notFoundContent="No districts created"
+              />
+
+              <Select
+                placeholder={locationOptions.length === 0 ? 'Location (None created)' : 'Location'}
+                allowClear
+                value={locationFilter}
+                style={{ width: 170 }}
+                onChange={(val) => setLocationFilter(val || undefined)}
+                options={[{ label: 'All', value: '' }, ...locationOptions]}
+                notFoundContent="No locations created"
+              />
+
+              {(collegeSearch || typeFilter || districtFilter || locationFilter) && (
+                <Button icon={<ReloadOutlined />} onClick={resetCollegeFilters}>
+                  Clear
+                </Button>
+              )}
+            </Space>
+
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              Showing <strong>{filteredColleges.length}</strong> of {colleges.length} colleges
+            </Text>
+          </div>
+
+          {/* Colleges Table */}
+          <Table
+            dataSource={filteredColleges}
+            rowKey="id"
+            loading={collegesLoading}
+            pagination={{ pageSize: 10, showSizeChanger: true, size: 'small' }}
+            scroll={{ x: 1300 }}
+            size="middle"
+            columns={[
+              {
+                title: 'Code',
+                dataIndex: 'code',
+                key: 'code',
+                width: 85,
+                render: (code) => (
+                  <Tag
+                    color="blue"
+                    style={{ fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}
+                  >
+                    {code}
+                  </Tag>
+                ),
+              },
+              {
+                title: 'Affiliated College Name',
+                dataIndex: 'name',
+                key: 'name',
+                render: (name, record) => (
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#002147', fontSize: '13px' }}>{name}</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>
+                      {record.address || record.district}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                title: 'Category',
+                dataIndex: 'type',
+                key: 'type',
+                width: 120,
+                render: (type) => {
+                  const colors: Record<string, string> = {
+                    GOVERNMENT: 'cyan',
+                    AIDED: 'green',
+                    UNAIDED: 'orange',
+                  };
+                  return <Tag color={colors[type] || 'default'}>{type}</Tag>;
+                },
+              },
+              {
+                title: 'District & Area',
+                key: 'district',
+                width: 170,
+                render: (_, record) => (
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 500 }}>{record.district}</div>
+                    <Tag color="geekblue" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
+                      {record.location}
+                    </Tag>
+                  </div>
+                ),
+              },
+              {
+                title: 'Tags',
+                key: 'tags',
+                width: 130,
+                render: (_, record) => (
+                  <Space size={2} direction="vertical">
+                    {record.isAutonomous && (
+                      <Tag color="purple" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
+                        AUTONOMOUS
+                      </Tag>
+                    )}
+                    {record.hasHostel && (
+                      <Tag color="gold" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>
+                        HOSTEL
+                      </Tag>
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                title: 'Academic Streams & Sanctioned Programs',
+                key: 'courses',
+                width: 250,
+                render: (_, record) => {
+                  const collegeCourses = record.courses && record.courses.length > 0
+                    ? record.courses
+                    : (record.courseIds && record.courseIds.length > 0)
+                      ? courses.filter((c) => record.courseIds?.includes(c.id) || record.courseIds?.includes(c.code))
+                      : [];
+
+                  const colStreams = record.streams && record.streams.length > 0
+                    ? record.streams
+                    : record.courseIntakes && record.courseIntakes.length > 0
+                      ? Array.from(new Set(record.courseIntakes.map((ci) => ci.stream).filter(Boolean)))
+                      : collegeCourses.map((c: any) => c.stream || c.courseGroup || 'UG');
+                  const uniqueStreams = Array.from(new Set(colStreams));
+
+                  const totalSeats = record.courseIntakes && record.courseIntakes.length > 0
+                    ? record.courseIntakes.reduce((sum, ci) => sum + (ci.sanctionedIntake || 0), 0)
+                    : collegeCourses.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || c.defaultIntake || 60), 0);
+
+                  const streamColors: Record<string, string> = {
+                    UG: 'blue',
+                    PG: 'green',
+                    LAW: 'volcano',
+                    EDUCATION: 'purple',
+                  };
+
+                  if (collegeCourses.length === 0 && uniqueStreams.length === 0) {
+                    return <span style={{ color: '#aaa', fontSize: '11px', fontStyle: 'italic' }}>No programs mapped</span>;
+                  }
+
+                  return (
+                    <div>
+                      {uniqueStreams.length > 0 && (
+                        <div style={{ marginBottom: 4 }}>
+                          <Space size={[2, 2]} wrap>
+                            {uniqueStreams.map((st) => (
+                              <Tag
+                                key={st}
+                                color={streamColors[st] || 'geekblue'}
+                                style={{ fontSize: '10px', fontWeight: 800, padding: '0 5px', margin: 0 }}
+                              >
+                                {st}
+                              </Tag>
+                            ))}
+                          </Space>
+                        </div>
+                      )}
+                      <Tooltip
+                        title={
+                          <div style={{ fontSize: '11px' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 4 }}>Sanctioned Programs:</div>
+                            {(record.courseIntakes?.length ? record.courseIntakes : collegeCourses).map((c: any) => (
+                              <div key={c.courseId || c.id || c.code}>
+                                • {c.courseName || c.name} ({c.courseCode || c.code}): <strong>{c.sanctionedIntake || c.defaultIntake || 60} Seats</strong>
+                              </div>
+                            ))}
+                          </div>
+                        }
+                      >
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#002147', cursor: 'pointer' }}>
+                          {collegeCourses.length || record.courseIntakes?.length || 0} Programs • <Tag color="cyan" style={{ fontWeight: 700, marginLeft: 2 }}>{totalSeats} Seats</Tag>
+                        </span>
+                      </Tooltip>
+                    </div>
+                  );
+                },
+              },
+              {
+                title: 'Principal Contact',
+                key: 'contact',
+                width: 220,
+                render: (_, record) => {
+                  const isNamePhone = /^\+?\d[\d\s\-]{7,15}$/.test((record.principalName || '').trim());
+                  const isPlaceholder = (record.principalName || '').startsWith('Principal (');
+                  const known = KNOWN_PRINCIPALS[record.code];
+                  const displayName = (known && (isNamePhone || isPlaceholder || !record.principalName))
+                    ? known.name
+                    : isNamePhone
+                      ? (known?.name || `Dr. Principal`)
+                      : (record.principalName || known?.name || `Dr. Principal (${record.code})`);
+                  const displayMobile = isNamePhone
+                    ? record.principalName
+                    : (record.principalMobile || known?.mobile);
+                  return (
+                    <div style={{ fontSize: '12px' }}>
+                      <div style={{ fontWeight: 600, color: '#002147' }}>{displayName}</div>
+                      {displayMobile && (
+                        <div style={{ color: '#555', fontSize: '11px', fontWeight: 500 }}>{displayMobile}</div>
+                      )}
+                      {record.principalEmail && (
+                        <div style={{ color: '#888', fontSize: '10px' }}>{record.principalEmail}</div>
+                      )}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: 'Actions',
+                key: 'actions',
+                width: 130,
+                fixed: 'right',
+                render: (_, record) => (
+                  <Space size={2}>
+                    <Tooltip title="View Details">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EyeOutlined style={{ color: '#002147' }} />}
+                        onClick={() => handleViewCollege(record.id)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Edit College">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined style={{ color: '#1890ff' }} />}
+                        onClick={() => openEditCollegeModal(record)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Delete College">
+                      <Popconfirm
+                        title="Delete College"
+                        description={`Are you sure you want to delete ${record.name}?`}
+                        okText="Delete"
+                        cancelText="Cancel"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => handleDeleteCollege(record.id)}
+                      >
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                        />
+                      </Popconfirm>
+                    </Tooltip>
+                  </Space>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      </div>
 
       {/* ==========================================
           MODAL: BULK UPLOAD COLLEGES
@@ -2280,7 +2280,7 @@ export const CollegesMasterPage: React.FC = () => {
           </Paragraph>
 
           <Row gutter={[12, 12]}>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={30}>
               <Upload.Dragger
                 name="file"
                 multiple={false}
@@ -2298,39 +2298,10 @@ export const CollegesMasterPage: React.FC = () => {
               </Upload.Dragger>
             </Col>
 
-            <Col xs={24} md={12}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Button
-                  block
-                  icon={<DownloadOutlined />}
-                  onClick={() => downloadSampleTemplate('COLLEGES')}
-                >
-                  Download Sample Excel (.xlsx) Template
-                </Button>
-                <Button
-                  block
-                  icon={<ThunderboltOutlined />}
-                  onClick={() => loadDemoBulkData('COLLEGES')}
-                >
-                  Load Demo Colleges Data
-                </Button>
-              </Space>
-            </Col>
+
           </Row>
 
-          <div style={{ marginTop: 12 }}>
-            <Text strong style={{ fontSize: '12px' }}>Or Paste Tabular Data from Excel / CSV:</Text>
-            <TextArea
-              rows={4}
-              placeholder="College_Code,College_Name,Type,Location,District,Principal_Name,Principal_Mobile,Principal_Email..."
-              value={pastedData}
-              onChange={(e) => {
-                setPastedData(e.target.value);
-                parseDelimitedText(e.target.value, 'COLLEGES');
-              }}
-              style={{ fontFamily: 'monospace', fontSize: '12px', marginTop: 4 }}
-            />
-          </div>
+
         </div>
 
         {/* Preview parsed rows */}
@@ -3294,16 +3265,16 @@ export const CollegesMasterPage: React.FC = () => {
                   ? selectedCollege.courseIntakes
                   : selectedCollege.courses?.length
                     ? selectedCollege.courses.map((c: any) => ({
-                        courseId: c.id,
-                        courseCode: c.code,
-                        courseName: c.name,
-                        stream: c.stream || c.courseGroup || 'UG',
-                        degreeType: c.degreeType || 'Degree',
-                        branch: c.branch || c.name,
-                        sanctionedIntake: c.sanctionedIntake || c.defaultIntake || 60,
-                        convenorQuota: Math.round((c.sanctionedIntake || c.defaultIntake || 60) * 0.7),
-                        managementQuota: Math.round((c.sanctionedIntake || c.defaultIntake || 60) * 0.3),
-                      }))
+                      courseId: c.id,
+                      courseCode: c.code,
+                      courseName: c.name,
+                      stream: c.stream || c.courseGroup || 'UG',
+                      degreeType: c.degreeType || 'Degree',
+                      branch: c.branch || c.name,
+                      sanctionedIntake: c.sanctionedIntake || c.defaultIntake || 60,
+                      convenorQuota: Math.round((c.sanctionedIntake || c.defaultIntake || 60) * 0.7),
+                      managementQuota: Math.round((c.sanctionedIntake || c.defaultIntake || 60) * 0.3),
+                    }))
                     : []
               }
               rowKey={(r: any) => r.courseId || r.courseCode || r.code || Math.random().toString()}

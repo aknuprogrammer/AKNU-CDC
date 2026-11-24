@@ -60,24 +60,6 @@ export const UniversityDashboard: React.FC = () => {
             Adikavi Nannaya University • Academic Year 2026-27 Affiliation Cycle
           </Text>
         </div>
-        <Space wrap>
-          <Button
-            type="primary"
-            icon={<FileDoneOutlined />}
-            onClick={() => navigate('/university/proceedings')}
-            style={{ background: '#002147' }}
-          >
-            Draft Proceedings
-          </Button>
-          <Button
-            type="primary"
-            icon={<DollarOutlined />}
-            onClick={() => navigate('/university/fee-engine')}
-            style={{ background: '#D4AF37', color: '#002147', border: 'none', fontWeight: 600 }}
-          >
-            Fee Engine Preview
-          </Button>
-        </Space>
       </div>
 
       {/* KPI Cards */}
@@ -96,7 +78,7 @@ export const UniversityDashboard: React.FC = () => {
               prefix={<BankOutlined style={{ color: '#002147' }} />}
               suffix={<Text type="secondary" style={{ fontSize: '12px' }}>Total</Text>}
             />
-            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'row', gap: '4px' }}>
               <Tag color="cyan">Govt: {collegeStats?.govt ?? 0}</Tag>
               <Tag color="blue">Aided: {collegeStats?.aided ?? 0}</Tag>
               <Tag color="purple">Autonomous: {collegeStats?.autonomous ?? 0}</Tag>
@@ -174,7 +156,7 @@ export const UniversityDashboard: React.FC = () => {
 
       {/* Main Grid: Recent Demands & Quick Action Hub */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} xl={16}>
+        <Col xs={24} xl={30}>
           <Card
             title={
               <Space>
@@ -247,60 +229,6 @@ export const UniversityDashboard: React.FC = () => {
                 },
               ]}
             />
-          </Card>
-        </Col>
-
-        {/* Quick Operations Hub */}
-        <Col xs={24} lg={8}>
-          <Card
-            title="University CDC Operations"
-            style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-          >
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              <Button
-                block
-                size="large"
-                icon={<BankOutlined />}
-                onClick={() => navigate('/university/colleges')}
-                style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>Affiliated Colleges Register ({collegeStats?.total ?? 0})</span>
-                <ArrowRightOutlined />
-              </Button>
-
-              <Button
-                block
-                size="large"
-                icon={<FileDoneOutlined />}
-                onClick={() => navigate('/university/proceedings')}
-                style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>Bulk DSC Proceeding Signing</span>
-                <ArrowRightOutlined />
-              </Button>
-
-              <Button
-                block
-                size="large"
-                icon={<UsergroupAddOutlined />}
-                onClick={() => navigate('/university/students')}
-                style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>Student Intake & APAAR Check</span>
-                <ArrowRightOutlined />
-              </Button>
-
-              <Button
-                block
-                size="large"
-                icon={<DownloadOutlined />}
-                onClick={() => navigate('/university/reports')}
-                style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <span>AISHE Ministry Enrolment Report</span>
-                <ArrowRightOutlined />
-              </Button>
-            </Space>
           </Card>
         </Col>
       </Row>
