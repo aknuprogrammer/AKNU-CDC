@@ -100,6 +100,10 @@ export interface Proceeding {
   collegeId: string;
   collegeName?: string;
   collegeCode?: string;
+  college?: College;
+  pdfUrl?: string;
+  originalFileName?: string;
+  fileSizeBytes?: number;
   courseGroupId: CourseGroup;
   templateType: 'AFFILIATION' | 'INTAKE_SANCTION' | 'CORRIGENDUM' | 'SUPPLEMENTARY' | 'FEE_NOTICE' | 'CIRCULAR';
   status: 'DRAFT' | 'SUPERINTENDENT_CHECKED' | 'APPROVED' | 'ISSUED' | 'ACKNOWLEDGED' | 'REJECTED';

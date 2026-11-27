@@ -45,6 +45,9 @@ import {
   BranchesOutlined,
   TeamOutlined,
   SafetyCertificateOutlined,
+  FilePdfOutlined,
+  ClockCircleOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
@@ -278,6 +281,72 @@ export const CollegesMasterPage: React.FC = () => {
   const [seatMatrixPastedData, setSeatMatrixPastedData] = useState<string>('');
   const [seatMatrixParsedRows, setSeatMatrixParsedRows] = useState<any[]>([]);
   const [seatMatrixUploading, setSeatMatrixUploading] = useState(false);
+
+  // ==========================================
+  // PROCEEDING PDF UPLOAD & AUTO-FETCH STATE
+  // ==========================================
+  const [uploadPdfModalOpen, setUploadPdfModalOpen] = useState(false);
+  const [targetCollegeForPdf, setTargetCollegeForPdf] = useState<College | null>(null);
+  const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null);
+  const [parsingPdf, setParsingPdf] = useState(false);
+  const [parsedProceedingResult, setParsedProceedingResult] = useState<any | null>(null);
+  const [confirmingUpload, setConfirmingUpload] = useState(false);
+
+  const handleOpenProceedingUploadModal = (college: College) => {
+    setTargetCollegeForPdf(college);
+    setUploadedPdfFile(null);
+    setParsedProceedingResult(null);
+    setUploadPdfModalOpen(true);
+  };
+
+  const handlePdfFileSelected = async (file: File) => {
+    if (!targetCollegeForPdf) return;
+    setUploadedPdfFile(file);
+    setParsingPdf(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('collegeId', targetCollegeForPdf.id);
+      formData.append('academicYear', '2026-27');
+
+      const res = await api.proceedings.uploadPdf(formData);
+      setParsedProceedingResult(res.data);
+      message.success(`Parsed official proceeding! Extracted ${res.data.parsedData.items.length} Single Major programs.`);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Failed to parse proceeding PDF');
+    } finally {
+      setParsingPdf(false);
+    }
+  };
+
+  const handleConfirmAndIssueProceeding = async () => {
+    if (!targetCollegeForPdf || !parsedProceedingResult) return;
+    setConfirmingUpload(true);
+    try {
+      const payload = {
+        collegeId: targetCollegeForPdf.id,
+        academicYear: parsedProceedingResult.parsedData.academicYear || '2026-27',
+        proceedingNumber: parsedProceedingResult.parsedData.proceedingNumber,
+        stream: parsedProceedingResult.parsedData.stream || 'UG',
+        items: parsedProceedingResult.parsedData.items,
+        conditions: parsedProceedingResult.parsedData.conditions,
+        pdfUrl: parsedProceedingResult.fileMeta?.relativeUrl,
+        originalFileName: parsedProceedingResult.fileMeta?.originalFileName,
+        fileSizeBytes: parsedProceedingResult.fileMeta?.fileSizeBytes,
+      };
+
+      const res = await api.proceedings.confirmUpload(payload);
+      message.success(res.data.message || 'Proceeding issued and courses auto-synced to college!');
+      setUploadPdfModalOpen(false);
+      setParsedProceedingResult(null);
+      setUploadedPdfFile(null);
+      loadColleges();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Failed to issue proceeding and sync college');
+    } finally {
+      setConfirmingUpload(false);
+    }
+  };
 
   // ==========================================
   // EDIT STATE: MAIN TABLES & PREVIEW ROWS
@@ -547,39 +616,10 @@ export const CollegesMasterPage: React.FC = () => {
 
   const handleCreateCollege = async (values: any) => {
     try {
-      const selectedCourseIds = Object.keys(createCollegeIntakes).filter(
-        (id) => (createCollegeIntakes[id] || 0) > 0,
-      );
-      const courseIntakes = selectedCourseIds.map((cId) => {
-        const crs = courses.find((c) => c.id === cId || c.code === cId);
-        const sanctioned = createCollegeIntakes[cId] || crs?.defaultIntake || 60;
-        return {
-          courseId: crs?.id || cId,
-          courseCode: crs?.code || cId,
-          courseName: crs?.name || cId,
-          stream: crs?.stream || crs?.courseGroup || 'UG',
-          degreeType: crs?.degreeType || 'Degree',
-          branch: crs?.branch || crs?.name || '',
-          sanctionedIntake: sanctioned,
-          convenorQuota: Math.round(sanctioned * 0.7),
-          managementQuota: Math.round(sanctioned * 0.3),
-          spotAdmission: 0,
-        };
-      });
-
-      const payload = {
-        ...values,
-        streams: createCollegeStreams,
-        courseIds: selectedCourseIds,
-        courseIntakes,
-      };
-
-      await api.colleges.create(payload);
-      message.success('New affiliated college registered with sanctioned course intakes!');
+      await api.colleges.create(values);
+      message.success('New affiliated college registered! Please upload the Proceeding PDF to auto-fetch courses and intakes.');
       setCreateCollegeModal(false);
       collegeForm.resetFields();
-      setCreateCollegeStreams(['UG']);
-      setCreateCollegeIntakes({});
       loadColleges();
     } catch (err: any) {
       message.error(err.response?.data?.message || 'Failed to register college');
@@ -611,38 +651,14 @@ export const CollegesMasterPage: React.FC = () => {
       initialMobile = record.principalName;
     }
 
-    // Populate active streams
-    const colStreams = record.streams && record.streams.length > 0
-      ? record.streams
-      : record.courseIntakes && record.courseIntakes.length > 0
-        ? Array.from(new Set(record.courseIntakes.map((ci) => ci.stream).filter(Boolean)))
-        : ['UG'];
-    setEditCollegeStreams(colStreams);
-
-    // Populate intakes map
-    const intakesMap: Record<string, number> = {};
-    if (record.courseIntakes && record.courseIntakes.length > 0) {
-      record.courseIntakes.forEach((ci) => {
-        intakesMap[ci.courseId] = ci.sanctionedIntake;
-      });
-    } else if ((record as any).courses?.length) {
-      (record as any).courses.forEach((c: any) => {
-        intakesMap[c.id || c.code] = c.sanctionedIntake || c.defaultIntake || 60;
-      });
-    } else if (record.courseIds?.length) {
-      record.courseIds.forEach((cId) => {
-        const crs = courses.find((c) => c.id === cId || c.code === cId);
-        intakesMap[cId] = crs?.defaultIntake || 60;
-      });
-    }
-    setEditCollegeIntakes(intakesMap);
-
     editCollegeForm.setFieldsValue({
       code: record.code,
       name: record.name,
       type: record.type,
       district: record.district,
       location: record.location,
+      address: record.address,
+      pincode: record.pincode,
       principalName: initialName,
       principalMobile: initialMobile,
       principalEmail: record.principalEmail,
@@ -655,35 +671,8 @@ export const CollegesMasterPage: React.FC = () => {
   const handleUpdateCollege = async (values: any) => {
     if (!editingCollege) return;
     try {
-      const selectedCourseIds = Object.keys(editCollegeIntakes).filter(
-        (id) => (editCollegeIntakes[id] || 0) > 0,
-      );
-      const courseIntakes = selectedCourseIds.map((cId) => {
-        const crs = courses.find((c) => c.id === cId || c.code === cId);
-        const sanctioned = editCollegeIntakes[cId] || crs?.defaultIntake || 60;
-        return {
-          courseId: crs?.id || cId,
-          courseCode: crs?.code || cId,
-          courseName: crs?.name || cId,
-          stream: crs?.stream || crs?.courseGroup || 'UG',
-          degreeType: crs?.degreeType || 'Degree',
-          branch: crs?.branch || crs?.name || '',
-          sanctionedIntake: sanctioned,
-          convenorQuota: Math.round(sanctioned * 0.7),
-          managementQuota: Math.round(sanctioned * 0.3),
-          spotAdmission: 0,
-        };
-      });
-
-      const payload = {
-        ...values,
-        streams: editCollegeStreams,
-        courseIds: selectedCourseIds,
-        courseIntakes,
-      };
-
-      await api.colleges.update(editingCollege.id, payload);
-      message.success('Affiliated college and sanctioned courses updated successfully!');
+      await api.colleges.update(editingCollege.id, values);
+      message.success('Affiliated college profile updated successfully!');
       setEditCollegeModalOpen(false);
       setEditingCollege(null);
       loadColleges();
@@ -2109,26 +2098,18 @@ export const CollegesMasterPage: React.FC = () => {
                 ),
               },
               {
-                title: 'Academic Streams & Sanctioned Programs',
-                key: 'courses',
-                width: 250,
+                title: 'Affiliation Order (Proceeding)',
+                key: 'proceedings',
+                width: 260,
                 render: (_, record) => {
-                  const collegeCourses = record.courses && record.courses.length > 0
-                    ? record.courses
-                    : (record.courseIds && record.courseIds.length > 0)
-                      ? courses.filter((c) => record.courseIds?.includes(c.id) || record.courseIds?.includes(c.code))
-                      : [];
-
-                  const colStreams = record.streams && record.streams.length > 0
-                    ? record.streams
-                    : record.courseIntakes && record.courseIntakes.length > 0
-                      ? Array.from(new Set(record.courseIntakes.map((ci) => ci.stream).filter(Boolean)))
-                      : collegeCourses.map((c: any) => c.stream || c.courseGroup || 'UG');
-                  const uniqueStreams = Array.from(new Set(colStreams));
-
+                  const intakeCount = record.courseIntakes?.length || record.courses?.length || 0;
                   const totalSeats = record.courseIntakes && record.courseIntakes.length > 0
-                    ? record.courseIntakes.reduce((sum, ci) => sum + (ci.sanctionedIntake || 0), 0)
-                    : collegeCourses.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || c.defaultIntake || 60), 0);
+                    ? record.courseIntakes.reduce((sum: number, ci: any) => sum + (ci.sanctionedIntake || 0), 0)
+                    : (record.courses || []).reduce((sum: number, c: any) => sum + (c.sanctionedIntake || c.defaultIntake || 60), 0);
+
+                  const uniqueStreams = record.streams && record.streams.length > 0
+                    ? record.streams
+                    : Array.from(new Set((record.courseIntakes || record.courses || []).map((ci: any) => ci.stream || ci.courseGroup || 'UG').filter(Boolean)));
 
                   const streamColors: Record<string, string> = {
                     UG: 'blue',
@@ -2137,43 +2118,60 @@ export const CollegesMasterPage: React.FC = () => {
                     EDUCATION: 'purple',
                   };
 
-                  if (collegeCourses.length === 0 && uniqueStreams.length === 0) {
-                    return <span style={{ color: '#aaa', fontSize: '11px', fontStyle: 'italic' }}>No programs mapped</span>;
+                  if (intakeCount === 0) {
+                    return (
+                      <div>
+                        <Tag color="warning" style={{ fontWeight: 600, marginBottom: 4 }}>
+                          Pending Proceeding PDF
+                        </Tag>
+                        <div>
+                          <Button
+                            size="small"
+                            type="primary"
+                            ghost
+                            icon={<UploadOutlined />}
+                            style={{ fontSize: '11px', height: '24px', padding: '0 8px' }}
+                            onClick={() => handleOpenProceedingUploadModal(record)}
+                          >
+                            Upload Proceeding PDF
+                          </Button>
+                        </div>
+                      </div>
+                    );
                   }
 
                   return (
                     <div>
-                      {uniqueStreams.length > 0 && (
-                        <div style={{ marginBottom: 4 }}>
-                          <Space size={[2, 2]} wrap>
-                            {uniqueStreams.map((st) => (
-                              <Tag
-                                key={st}
-                                color={streamColors[st] || 'geekblue'}
-                                style={{ fontSize: '10px', fontWeight: 800, padding: '0 5px', margin: 0 }}
-                              >
-                                {st}
-                              </Tag>
-                            ))}
-                          </Space>
-                        </div>
-                      )}
-                      <Tooltip
-                        title={
-                          <div style={{ fontSize: '11px' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 4 }}>Sanctioned Programs:</div>
-                            {(record.courseIntakes?.length ? record.courseIntakes : collegeCourses).map((c: any) => (
-                              <div key={c.courseId || c.id || c.code}>
-                                • {c.courseName || c.name} ({c.courseCode || c.code}): <strong>{c.sanctionedIntake || c.defaultIntake || 60} Seats</strong>
-                              </div>
-                            ))}
-                          </div>
-                        }
-                      >
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#002147', cursor: 'pointer' }}>
-                          {collegeCourses.length || record.courseIntakes?.length || 0} Programs • <Tag color="cyan" style={{ fontWeight: 700, marginLeft: 2 }}>{totalSeats} Seats</Tag>
-                        </span>
-                      </Tooltip>
+                      <div style={{ marginBottom: 4 }}>
+                        <Tag color="green" icon={<CheckCircleOutlined />} style={{ fontWeight: 700 }}>
+                          Order Linked ({intakeCount} Programs)
+                        </Tag>
+                      </div>
+                      <Space size={[2, 2]} wrap style={{ marginBottom: 4 }}>
+                        {uniqueStreams.map((st: any) => (
+                          <Tag
+                            key={st}
+                            color={streamColors[st] || 'geekblue'}
+                            style={{ fontSize: '10px', fontWeight: 800, padding: '0 4px', margin: 0 }}
+                          >
+                            {st}
+                          </Tag>
+                        ))}
+                        <Tag color="gold" style={{ fontSize: '10px', fontWeight: 700, padding: '0 4px', margin: 0 }}>
+                          {totalSeats} Seats
+                        </Tag>
+                      </Space>
+                      <div>
+                        <Button
+                          size="small"
+                          type="link"
+                          icon={<FileDoneOutlined />}
+                          style={{ padding: 0, fontSize: '11px' }}
+                          onClick={() => handleOpenProceedingUploadModal(record)}
+                        >
+                          Re-upload / Update Proceeding
+                        </Button>
+                      </div>
                     </div>
                   );
                 },
@@ -2210,10 +2208,18 @@ export const CollegesMasterPage: React.FC = () => {
               {
                 title: 'Actions',
                 key: 'actions',
-                width: 130,
+                width: 140,
                 fixed: 'right',
                 render: (_, record) => (
                   <Space size={2}>
+                    <Tooltip title="Upload Proceeding PDF">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<UploadOutlined style={{ color: '#52c41a' }} />}
+                        onClick={() => handleOpenProceedingUploadModal(record)}
+                      />
+                    </Tooltip>
                     <Tooltip title="View Details">
                       <Button
                         type="text"
@@ -3005,15 +3011,13 @@ export const CollegesMasterPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Dynamic Academic Hierarchy & Sanctioned Seat Mapper */}
-          <div style={{ marginBottom: 16 }}>
-            {renderCourseHierarchyMapper(
-              createCollegeStreams,
-              setCreateCollegeStreams,
-              createCollegeIntakes,
-              setCreateCollegeIntakes,
-            )}
-          </div>
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Affiliation Courses & Intakes Auto-Sync"
+            description="Academic streams, degrees, branches, and sanctioned intake capacities are strictly auto-fetched when the official University Affiliation Proceeding PDF is uploaded for this college."
+          />
 
           <Alert
             type="info"
@@ -3478,15 +3482,13 @@ export const CollegesMasterPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Dynamic Academic Hierarchy & Sanctioned Seat Mapper */}
-          <div style={{ marginBottom: 16 }}>
-            {renderCourseHierarchyMapper(
-              editCollegeStreams,
-              setEditCollegeStreams,
-              editCollegeIntakes,
-              setEditCollegeIntakes,
-            )}
-          </div>
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Affiliation Courses & Intakes Auto-Sync"
+            description="Approved programs and sanctioned intake capacity are auto-managed via the uploaded Proceeding PDF. To update course intakes, upload an updated or corrigendum Proceeding PDF."
+          />
 
           <div style={{ textAlign: 'right', marginTop: 12 }}>
             <Space>
@@ -3887,6 +3889,190 @@ export const CollegesMasterPage: React.FC = () => {
             </Space>
           </div>
         </Form>
+      </Modal>
+
+      {/* ==========================================
+          MODAL: UPLOAD PROCEEDING PDF (AUTO-FETCH COURSES & INTAKES)
+          ========================================== */}
+      <Modal
+        title={
+          <Space>
+            <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />
+            <span style={{ fontWeight: 700, color: '#002147' }}>
+              Upload Official Affiliation Proceeding PDF — {targetCollegeForPdf?.name} ({targetCollegeForPdf?.code})
+            </span>
+          </Space>
+        }
+        open={uploadPdfModalOpen}
+        onCancel={() => {
+          setUploadPdfModalOpen(false);
+          setParsedProceedingResult(null);
+          setUploadedPdfFile(null);
+        }}
+        width={840}
+        footer={null}
+      >
+        {!parsedProceedingResult ? (
+          <div>
+            <Alert
+              type="info"
+              showIcon
+              message="Official Proceeding Ingestion & Auto-Fetch Engine"
+              description="Upload the official signed 3-page AKNU Proceeding Order (PDF). The system automatically parses the document, extracts the approved single-major honours programs, mediums, and sanctioned intake capacities, and publishes the order directly to the College Principal portal."
+              style={{ marginBottom: 16 }}
+            />
+
+            <Upload.Dragger
+              name="file"
+              multiple={false}
+              accept=".pdf"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handlePdfFileSelected(file);
+                return false;
+              }}
+              style={{ padding: '24px 0', background: '#fafafa', borderRadius: 8, border: '2px dashed #1890ff' }}
+            >
+              <p className="ant-upload-drag-icon" style={{ margin: 0 }}>
+                <FilePdfOutlined style={{ fontSize: 36, color: '#ff4d4f' }} />
+              </p>
+              <p className="ant-upload-text" style={{ fontSize: '15px', fontWeight: 600, margin: '8px 0 4px', color: '#002147' }}>
+                Click or Drag & Drop College Proceeding Order (.pdf)
+              </p>
+              <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                Supports official Adikavi Nannaya University 3-page Affiliation Orders
+              </p>
+              {parsingPdf && (
+                <div style={{ marginTop: 12 }}>
+                  <Text strong style={{ color: '#1890ff' }}>
+                    ⚡ Parsing 3-page proceeding document and extracting single-major programs...
+                  </Text>
+                </div>
+              )}
+            </Upload.Dragger>
+          </div>
+        ) : (
+          <div>
+            <Alert
+              type="success"
+              showIcon
+              message="Proceeding Document Successfully Parsed!"
+              description={`Extracted ${parsedProceedingResult.parsedData?.items?.length || 0} single-major programs totaling ${parsedProceedingResult.parsedData?.totalSanctionedIntake || 0} sanctioned seats for Academic Year ${parsedProceedingResult.parsedData?.academicYear || '2026-27'}. Review details below and click 'Confirm & Auto-Sync'.`}
+              style={{ marginBottom: 14 }}
+            />
+
+            <Card size="small" style={{ background: '#f8fafc', borderRadius: 6, marginBottom: 14, border: '1px solid #d9e1e8' }}>
+              <Row gutter={[12, 8]}>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>Proceeding Number:</Text>
+                  <div style={{ fontWeight: 700, color: '#002147', fontSize: '13px' }}>
+                    {parsedProceedingResult.parsedData?.proceedingNumber}
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>Order Date:</Text>
+                  <div style={{ fontWeight: 600 }}>{parsedProceedingResult.parsedData?.dateOfOrder}</div>
+                </Col>
+                <Col span={6}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>Stream / Level:</Text>
+                  <div><Tag color="blue" style={{ fontWeight: 800 }}>{parsedProceedingResult.parsedData?.stream || 'UG'}</Tag></div>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>Affiliated College:</Text>
+                  <div style={{ fontWeight: 600 }}>{parsedProceedingResult.parsedData?.collegeName}</div>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>Total Sanctioned Intake:</Text>
+                  <div>
+                    <Tag color="gold" style={{ fontWeight: 800, fontSize: '13px' }}>
+                      {parsedProceedingResult.parsedData?.totalSanctionedIntake} Seats
+                    </Tag>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+
+            <Title level={5} style={{ margin: '8px 0', color: '#002147' }}>
+              Extracted Single Major Programmes & Intakes (NEP 2020 Matrix):
+            </Title>
+            <Table
+              size="small"
+              dataSource={parsedProceedingResult.parsedData?.items || []}
+              rowKey={(r: any, idx) => `${r?.courseName || idx}`}
+              pagination={false}
+              scroll={{ y: 260 }}
+              columns={[
+                {
+                  title: 'Programme Type',
+                  dataIndex: 'degreeType',
+                  key: 'degreeType',
+                  width: 130,
+                  render: (t: any) => <Tag color="cyan">{t || 'DEGREE'}</Tag>,
+                },
+                {
+                  title: 'Single Major Programme (Specialization)',
+                  dataIndex: 'courseName',
+                  key: 'courseName',
+                  render: (name: any) => <Text strong style={{ fontSize: '12px', color: '#002147' }}>{name}</Text>,
+                },
+                {
+                  title: 'Medium',
+                  dataIndex: 'medium',
+                  key: 'medium',
+                  width: 90,
+                  render: (m: any) => <Tag color={m?.toLowerCase() === 'english' ? 'blue' : 'purple'}>{m || 'English'}</Tag>,
+                },
+                {
+                  title: 'Sanctioned Intake',
+                  dataIndex: 'sanctionedIntake',
+                  key: 'sanctionedIntake',
+                  width: 120,
+                  render: (intake: any) => (
+                    <Tag color="green" style={{ fontWeight: 800, fontSize: '12px' }}>
+                      {intake} Seats
+                    </Tag>
+                  ),
+                },
+                {
+                  title: 'CQ (70%)',
+                  dataIndex: 'convenorQuota',
+                  key: 'convenorQuota',
+                  width: 80,
+                  render: (cq: any) => <span style={{ color: '#555' }}>{cq}</span>,
+                },
+                {
+                  title: 'MQ (30%)',
+                  dataIndex: 'managementQuota',
+                  key: 'managementQuota',
+                  width: 80,
+                  render: (mq: any) => <span style={{ color: '#555' }}>{mq}</span>,
+                },
+              ]}
+            />
+
+            <div style={{ textAlign: 'right', marginTop: 16 }}>
+              <Space>
+                <Button
+                  onClick={() => {
+                    setParsedProceedingResult(null);
+                    setUploadedPdfFile(null);
+                  }}
+                >
+                  Back / Re-upload
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  loading={confirmingUpload}
+                  onClick={handleConfirmAndIssueProceeding}
+                  style={{ background: '#52c41a', borderColor: '#52c41a', fontWeight: 700 }}
+                >
+                  Confirm, Issue & Auto-Sync to College Portal
+                </Button>
+              </Space>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -119,6 +119,9 @@ export interface MockProceeding {
   conditions: string;
   dscSignatureHash?: string;
   qrVerificationCode: string;
+  pdfUrl?: string;
+  originalFileName?: string;
+  fileSizeBytes?: number;
   acknowledgedAt?: string;
   issuedAt?: string;
   createdAt: string;

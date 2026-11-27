@@ -161,6 +161,23 @@ export const api = {
         proceedings: Proceeding[];
         errors: { row: number; error: string }[];
       }>('/proceedings/bulk-upload', { rows }),
+    uploadPdf: (formData: FormData) =>
+      apiClient.post<{
+        success: boolean;
+        college: { id: string; code: string; name: string };
+        fileMeta: { originalFileName: string; storedFileName: string; fileSizeBytes: number; relativeUrl: string };
+        parsedData: any;
+      }>('/proceedings/upload-pdf', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }),
+    confirmUpload: (data: any) =>
+      apiClient.post<{
+        success: boolean;
+        message: string;
+        proceeding: Proceeding;
+        college: any;
+      }>('/proceedings/confirm-upload', data),
+    getDownloadUrl: (id: string) => `/api/proceedings/${id}/download-pdf`,
   },
 
   // Students

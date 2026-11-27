@@ -31,6 +31,7 @@ import {
   ThunderboltOutlined,
   FileExcelOutlined,
   DeleteOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { Proceeding, College } from '../../api/types';
@@ -57,6 +58,14 @@ export const ProceedingsWorkflowPage: React.FC = () => {
   const [procPastedData, setProcPastedData] = useState<string>('');
   const [procParsedRows, setProcParsedRows] = useState<any[]>([]);
   const [procUploading, setProcUploading] = useState(false);
+
+  // Option 3: Upload Official Proceeding PDF (Auto-fetch courses, streams & intakes)
+  const [pdfUploadModalOpen, setPdfUploadModalOpen] = useState(false);
+  const [pdfTargetCollegeId, setPdfTargetCollegeId] = useState<string>('');
+  const [pdfSelectedFile, setPdfSelectedFile] = useState<File | null>(null);
+  const [pdfParsedResult, setPdfParsedResult] = useState<any | null>(null);
+  const [pdfParsing, setPdfParsing] = useState(false);
+  const [pdfConfirming, setPdfConfirming] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -361,6 +370,64 @@ export const ProceedingsWorkflowPage: React.FC = () => {
     }
   };
 
+  const handlePdfFileSelect = async (file: File) => {
+    if (!pdfTargetCollegeId) {
+      message.error('Please select a college first before uploading its proceeding PDF.');
+      return false;
+    }
+    setPdfSelectedFile(file);
+    setPdfParsing(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('collegeId', pdfTargetCollegeId);
+      formData.append('academicYear', '2026-27');
+
+      const res = await api.proceedings.uploadPdf(formData);
+      setPdfParsedResult(res.data);
+      message.success(`Parsed ${res.data.parsedData.courses?.length || 0} single-major programmes from official PDF!`);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Failed to extract text from PDF');
+    } finally {
+      setPdfParsing(false);
+    }
+    return false;
+  };
+
+  const handleConfirmPdfProceeding = async () => {
+    if (!pdfParsedResult || !pdfTargetCollegeId) return;
+    setPdfConfirming(true);
+    try {
+      const payload = {
+        collegeId: pdfTargetCollegeId,
+        proceedingNumber: pdfParsedResult.parsedData.proceedingNumber,
+        academicYear: pdfParsedResult.parsedData.academicYear || '2026-27',
+        courseGroupId: 'UG',
+        subject: pdfParsedResult.parsedData.subject,
+        bodyTemplate: pdfParsedResult.parsedData.orderBody,
+        conditions: pdfParsedResult.parsedData.conditions,
+        items: pdfParsedResult.parsedData.courses,
+        pdfUrl: pdfParsedResult.fileMeta.relativeUrl,
+        originalFileName: pdfParsedResult.fileMeta.originalFileName,
+        fileSizeBytes: pdfParsedResult.fileMeta.fileSizeBytes,
+      };
+
+      await api.proceedings.confirmUpload(payload);
+      message.success(
+        `Official Proceeding issued to Principal portal & ${payload.items.length} Single Major courses auto-synced!`,
+      );
+      setPdfUploadModalOpen(false);
+      setPdfTargetCollegeId('');
+      setPdfSelectedFile(null);
+      setPdfParsedResult(null);
+      loadData();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Failed to confirm proceeding upload');
+    } finally {
+      setPdfConfirming(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
@@ -378,6 +445,18 @@ export const ProceedingsWorkflowPage: React.FC = () => {
             onClick={downloadProceedingsTemplate}
           >
             Affiliation Template (.xlsx)
+          </Button>
+          <Button
+            icon={<FilePdfOutlined style={{ color: '#cf1322' }} />}
+            onClick={() => {
+              setPdfParsedResult(null);
+              setPdfSelectedFile(null);
+              setPdfTargetCollegeId('');
+              setPdfUploadModalOpen(true);
+            }}
+            style={{ borderColor: '#ffa39e', color: '#cf1322' }}
+          >
+            Upload Proceeding PDF
           </Button>
           <Button
             icon={<UploadOutlined style={{ color: '#096dd9' }} />}
@@ -428,7 +507,16 @@ export const ProceedingsWorkflowPage: React.FC = () => {
               title: 'Proceeding No',
               dataIndex: 'proceedingNumber',
               key: 'proceedingNumber',
-              render: (val) => <Text strong>{val}</Text>,
+              render: (val, r) => (
+                <Space direction="vertical" size={2}>
+                  <Text strong>{val}</Text>
+                  {r.pdfUrl ? (
+                    <Tag color="red" icon={<FilePdfOutlined />}>
+                      Official PDF
+                    </Tag>
+                  ) : null}
+                </Space>
+              ),
             },
             {
               title: 'College',
@@ -494,6 +582,17 @@ export const ProceedingsWorkflowPage: React.FC = () => {
                     View
                   </Button>
 
+                  {r.pdfUrl && (
+                    <Button
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      onClick={() => window.open(api.proceedings.getDownloadUrl(r.id), '_blank')}
+                      style={{ borderColor: '#ff4d4f', color: '#cf1322' }}
+                    >
+                      PDF
+                    </Button>
+                  )}
+
                   {r.status === 'DRAFT' && (
                     <Button
                       size="small"
@@ -543,6 +642,25 @@ export const ProceedingsWorkflowPage: React.FC = () => {
               type={selectedProc.dscSignatureHash ? 'success' : 'info'}
               showIcon
             />
+
+            {selectedProc.pdfUrl && (
+              <Alert
+                message="Official Signed Vice-Chancellor Proceeding Order Attached"
+                description={`Uploaded Document: ${selectedProc.originalFileName || 'AKNU_Affiliation_Proceeding.pdf'}`}
+                type="success"
+                showIcon
+                action={
+                  <Button
+                    type="primary"
+                    danger
+                    icon={<DownloadOutlined />}
+                    onClick={() => window.open(api.proceedings.getDownloadUrl(selectedProc.id), '_blank')}
+                  >
+                    Download PDF
+                  </Button>
+                }
+              />
+            )}
 
             <div>
               <Text type="secondary">Subject:</Text>
@@ -911,6 +1029,120 @@ export const ProceedingsWorkflowPage: React.FC = () => {
             </Button>
           </Space>
         </div>
+      </Modal>
+
+      {/* Upload Official Proceeding PDF Modal */}
+      <Modal
+        title={
+          <Space>
+            <FilePdfOutlined style={{ color: '#cf1322', fontSize: '20px' }} />
+            <span>Upload Official Proceeding PDF (Vice-Chancellor Order)</span>
+          </Space>
+        }
+        open={pdfUploadModalOpen}
+        width={850}
+        onCancel={() => {
+          setPdfUploadModalOpen(false);
+          setPdfParsedResult(null);
+          setPdfSelectedFile(null);
+          setPdfTargetCollegeId('');
+        }}
+        footer={null}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <Alert
+            message="Auto-Fetch College Courses, Streams & Sanctioned Intakes"
+            description="Upload the official 3-page Vice-Chancellor Proceeding Order (.pdf). The extraction engine will automatically parse single-major programmes, sanctioned intakes, and regulatory conditions, then immediately make it accessible exclusively to the respective College Principal portal."
+            type="info"
+            showIcon
+          />
+
+          <Row gutter={16}>
+            <Col span={14}>
+              <div style={{ marginBottom: 6, fontWeight: 600 }}>1. Select Target Affiliated College:</div>
+              <Select
+                showSearch
+                style={{ width: '100%' }}
+                placeholder="Search and select college by code or name..."
+                optionFilterProp="children"
+                value={pdfTargetCollegeId || undefined}
+                onChange={(val) => setPdfTargetCollegeId(val)}
+                options={colleges.map((c) => ({
+                  value: c.id,
+                  label: `[Code: ${c.code}] ${c.name} (${c.district})`,
+                }))}
+              />
+            </Col>
+            <Col span={10}>
+              <div style={{ marginBottom: 6, fontWeight: 600 }}>2. Select Proceeding PDF:</div>
+              <Upload.Dragger
+                accept=".pdf,application/pdf"
+                multiple={false}
+                showUploadList={false}
+                beforeUpload={handlePdfFileSelect}
+                disabled={!pdfTargetCollegeId || pdfParsing}
+                style={{ padding: '8px 0' }}
+              >
+                <p className="ant-upload-drag-icon" style={{ margin: '4px 0' }}>
+                  <FilePdfOutlined style={{ color: pdfTargetCollegeId ? '#cf1322' : '#bfbfbf', fontSize: '28px' }} />
+                </p>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>
+                  {pdfParsing ? 'Parsing Document...' : pdfSelectedFile ? pdfSelectedFile.name : 'Click / Drag Proceeding PDF'}
+                </p>
+              </Upload.Dragger>
+            </Col>
+          </Row>
+
+          {pdfParsedResult && (
+            <Card
+              size="small"
+              style={{ background: '#f6ffed', borderColor: '#b7eb8f', borderRadius: '8px' }}
+              title={
+                <Space>
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                  <span style={{ fontWeight: 700 }}>
+                    Extracted: {pdfParsedResult.parsedData?.courses?.length || 0} Single-Major Programmes (Total Intake: {pdfParsedResult.parsedData?.courses?.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || 0), 0)} Seats)
+                  </span>
+                </Space>
+              }
+            >
+              <div style={{ marginBottom: 12 }}>
+                <div><Text strong>Proceeding No:</Text> <code>{pdfParsedResult.parsedData?.proceedingNumber}</code></div>
+                <div><Text strong>Target College:</Text> {pdfParsedResult.college?.name} (Code: {pdfParsedResult.college?.code})</div>
+                <div><Text strong>Subject:</Text> {pdfParsedResult.parsedData?.subject}</div>
+              </div>
+
+              <Table
+                size="small"
+                pagination={{ pageSize: 5 }}
+                dataSource={pdfParsedResult.parsedData?.courses || []}
+                rowKey="courseName"
+                columns={[
+                  { title: 'Single Major Programme', dataIndex: 'courseName', key: 'courseName', render: (t) => <Text strong>{t}</Text> },
+                  { title: 'Medium', dataIndex: 'medium', key: 'medium', width: 90, render: (m) => <Tag>{m || 'English'}</Tag> },
+                  { title: 'Intake', dataIndex: 'sanctionedIntake', key: 'sanctionedIntake', width: 80, render: (v) => <Tag color="blue">{v}</Tag> },
+                  { title: 'CQ (70%)', dataIndex: 'convenorQuota', key: 'convenorQuota', width: 90 },
+                  { title: 'MQ (30%)', dataIndex: 'managementQuota', key: 'managementQuota', width: 90 },
+                ]}
+              />
+
+              <div style={{ marginTop: 16, textAlign: 'right' }}>
+                <Space>
+                  <Button onClick={() => setPdfParsedResult(null)}>Re-upload</Button>
+                  <Button
+                    type="primary"
+                    icon={<SafetyCertificateOutlined />}
+                    loading={pdfConfirming}
+                    onClick={handleConfirmPdfProceeding}
+                    style={{ background: '#52c41a', borderColor: '#52c41a', fontWeight: 700 }}
+                  >
+                    Confirm & Issue to College Principal Portal
+                  </Button>
+                </Space>
+              </div>
+            </Card>
+          )}
+        </Space>
       </Modal>
     </div>
   );
