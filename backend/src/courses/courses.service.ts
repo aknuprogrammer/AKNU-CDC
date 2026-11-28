@@ -38,6 +38,7 @@ export class CoursesService {
       active: true,
     };
     mockDb.courses.push(newCourse);
+    mockDb.save();
     return newCourse;
   }
 
@@ -58,6 +59,7 @@ export class CoursesService {
       }
     });
 
+    mockDb.save();
     return {
       success: true,
       totalReceived: rows.length,
@@ -74,6 +76,7 @@ export class CoursesService {
       throw new NotFoundException(`Course ${id} not found`);
     }
     mockDb.courses[index] = { ...mockDb.courses[index], ...data };
+    mockDb.save();
     return mockDb.courses[index];
   }
 
@@ -83,6 +86,7 @@ export class CoursesService {
       throw new NotFoundException(`Course ${id} not found`);
     }
     const removed = mockDb.courses.splice(index, 1)[0];
+    mockDb.save();
     return { success: true, removed };
   }
 }

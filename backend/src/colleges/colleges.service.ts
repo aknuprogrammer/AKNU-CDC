@@ -244,6 +244,7 @@ export class CollegesService {
       });
     }
 
+    mockDb.save();
     return newCollege;
   }
 
@@ -264,6 +265,7 @@ export class CollegesService {
       }
     });
 
+    mockDb.save();
     return {
       success: true,
       totalReceived: rows.length,
@@ -362,6 +364,7 @@ export class CollegesService {
     });
 
     updatedCollegesCount = affectedColleges.size;
+    mockDb.save();
 
     return {
       success: true,
@@ -399,6 +402,7 @@ export class CollegesService {
     };
 
     const updated = mockDb.colleges[index];
+    mockDb.save();
     const courses = (updated.courseIds && updated.courseIds.length > 0)
       ? mockDb.courses.filter((crs) => updated.courseIds?.includes(crs.id) || updated.courseIds?.includes(crs.code))
       : [];
@@ -415,6 +419,7 @@ export class CollegesService {
       throw new NotFoundException(`College ${id} not found`);
     }
     const removed = mockDb.colleges.splice(index, 1)[0];
+    mockDb.save();
     return { success: true, removed };
   }
 

@@ -30,6 +30,7 @@ export class UsersService {
       isActive: true,
     };
     mockDb.users.push(newUser);
+    mockDb.save();
     return newUser;
   }
 
@@ -39,6 +40,7 @@ export class UsersService {
       throw new NotFoundException(`User ${id} not found`);
     }
     mockDb.users[index] = { ...mockDb.users[index], ...data };
+    mockDb.save();
     return mockDb.users[index];
   }
 }

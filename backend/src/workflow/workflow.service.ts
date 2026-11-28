@@ -51,6 +51,7 @@ export class WorkflowService {
     };
 
     mockDb.workflowQueries.push(newQuery);
+    mockDb.save();
 
     this.recordAudit({
       userId: dto.fromUserId,
@@ -72,6 +73,7 @@ export class WorkflowService {
     query.responseText = responseText;
     query.status = 'RESOLVED';
     query.resolvedAt = new Date().toISOString();
+    mockDb.save();
 
     this.recordAudit({
       userId,

@@ -59,6 +59,7 @@ export class AuthService {
           isActive: true,
         };
         mockDb.users.push(targetUser);
+        mockDb.save();
       }
     } else {
       // Find university user by email or phone
@@ -79,6 +80,7 @@ export class AuthService {
             isActive: true,
           };
           mockDb.users.push(targetUser);
+          mockDb.save();
         } else {
           throw new BadRequestException(`User with identifier "${identifier}" not found. Please use an official AKNU login.`);
         }
@@ -193,6 +195,7 @@ export class AuthService {
           password: 'password',
         };
         mockDb.users.push(targetUser);
+        mockDb.save();
       } else {
         throw new BadRequestException(
           `University account with email "${identifier}" not found. Please enter your official AKNU email.`,
@@ -289,6 +292,7 @@ export class AuthService {
         mustChangePassword: college.mustChangePassword !== false,
       };
       mockDb.users.push(user);
+      mockDb.save();
     } else if (college.principalName && user.name.startsWith('Principal (')) {
       user.name = college.principalName;
     }
@@ -419,6 +423,7 @@ export class AuthService {
     college.mustChangePassword = false;
     college.tempPassword = undefined;
 
+    mockDb.save();
     this.logger.log(`[Auth] Password successfully updated for college ${college.code} (${user.email})`);
 
     // Generate tokens

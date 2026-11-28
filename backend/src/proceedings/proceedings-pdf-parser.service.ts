@@ -332,7 +332,7 @@ export class ProceedingsPdfParserService {
         const uncompressedText = uncompressed.toString('latin1');
 
         // Extract PDF text literals between parentheses (text) or inside BT ... ET blocks
-        const textLiteralRegex = new RegExp('\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*\\)', 'g');
+        const textLiteralRegex = /\(((?:\\\(|\\\)|[^)])*)\)/g;
         let textMatch: RegExpExecArray | null;
         while ((textMatch = textLiteralRegex.exec(uncompressedText)) !== null) {
           const cleanStr = textMatch[1].replace(/\\([()\\])/g, '$1');

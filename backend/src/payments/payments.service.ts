@@ -79,6 +79,7 @@ export class PaymentsService {
     };
 
     mockDb.payments.push(newPayment);
+    mockDb.save();
 
     return {
       paymentId: newPayment.id,
@@ -185,6 +186,7 @@ export class PaymentsService {
       payment.status = 'FAILED';
     }
 
+    mockDb.save();
     return {
       received: true,
       status: payment.status,

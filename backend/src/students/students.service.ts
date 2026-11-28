@@ -192,6 +192,7 @@ export class StudentsService {
     };
 
     mockDb.students.push(newStudent);
+    mockDb.save();
     return newStudent;
   }
 
@@ -217,6 +218,7 @@ export class StudentsService {
       }
     });
 
+    mockDb.save();
     return {
       totalProcessed: rows.length,
       successCount: successRows.length,
@@ -346,6 +348,7 @@ export class StudentsService {
       }
     }
 
+    mockDb.save();
     return {
       success: true,
       promotedCount,
@@ -360,6 +363,7 @@ export class StudentsService {
       throw new NotFoundException(`Student ${id} not found`);
     }
     student.status = status;
+    mockDb.save();
     return student;
   }
 }

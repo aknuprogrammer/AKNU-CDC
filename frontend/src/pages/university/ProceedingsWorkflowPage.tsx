@@ -385,7 +385,8 @@ export const ProceedingsWorkflowPage: React.FC = () => {
 
       const res = await api.proceedings.uploadPdf(formData);
       setPdfParsedResult(res.data);
-      message.success(`Parsed ${res.data.parsedData.courses?.length || 0} single-major programmes from official PDF!`);
+      const itemsCount = res.data.parsedData.items?.length || res.data.parsedData.courses?.length || 0;
+      message.success(`Parsed ${itemsCount} single-major programmes from official PDF!`);
     } catch (err: any) {
       message.error(err.response?.data?.message || 'Failed to extract text from PDF');
     } finally {
@@ -398,23 +399,24 @@ export const ProceedingsWorkflowPage: React.FC = () => {
     if (!pdfParsedResult || !pdfTargetCollegeId) return;
     setPdfConfirming(true);
     try {
+      const extractedItems = pdfParsedResult.parsedData.items || pdfParsedResult.parsedData.courses || [];
       const payload = {
         collegeId: pdfTargetCollegeId,
         proceedingNumber: pdfParsedResult.parsedData.proceedingNumber,
         academicYear: pdfParsedResult.parsedData.academicYear || '2026-27',
         courseGroupId: 'UG',
-        subject: pdfParsedResult.parsedData.subject,
-        bodyTemplate: pdfParsedResult.parsedData.orderBody,
+        subject: pdfParsedResult.parsedData.subject || `Provisional Affiliation accorded for academic year ${pdfParsedResult.parsedData.academicYear || '2026-27'} to ${pdfParsedResult.college?.name}`,
+        bodyTemplate: pdfParsedResult.parsedData.orderBody || `In exercise of the powers conferred under the Act of this University, conditional affiliation is hereby granted for academic year ${pdfParsedResult.parsedData.academicYear || '2026-27'}.`,
         conditions: pdfParsedResult.parsedData.conditions,
-        items: pdfParsedResult.parsedData.courses,
-        pdfUrl: pdfParsedResult.fileMeta.relativeUrl,
-        originalFileName: pdfParsedResult.fileMeta.originalFileName,
-        fileSizeBytes: pdfParsedResult.fileMeta.fileSizeBytes,
+        items: extractedItems,
+        pdfUrl: pdfParsedResult.fileMeta?.relativeUrl,
+        originalFileName: pdfParsedResult.fileMeta?.originalFileName,
+        fileSizeBytes: pdfParsedResult.fileMeta?.fileSizeBytes,
       };
 
       await api.proceedings.confirmUpload(payload);
       message.success(
-        `Official Proceeding issued to Principal portal & ${payload.items.length} Single Major courses auto-synced!`,
+        `Official Proceeding issued to Principal portal & ${extractedItems.length} Single Major courses auto-synced!`,
       );
       setPdfUploadModalOpen(false);
       setPdfTargetCollegeId('');
@@ -1101,7 +1103,7 @@ export const ProceedingsWorkflowPage: React.FC = () => {
                 <Space>
                   <CheckCircleOutlined style={{ color: '#52c41a' }} />
                   <span style={{ fontWeight: 700 }}>
-                    Extracted: {pdfParsedResult.parsedData?.courses?.length || 0} Single-Major Programmes (Total Intake: {pdfParsedResult.parsedData?.courses?.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || 0), 0)} Seats)
+                    Extracted: {(pdfParsedResult.parsedData?.items || pdfParsedResult.parsedData?.courses)?.length || 0} Single-Major Programmes (Total Intake: {pdfParsedResult.parsedData?.totalSanctionedIntake || (pdfParsedResult.parsedData?.items || pdfParsedResult.parsedData?.courses)?.reduce((sum: number, c: any) => sum + (c.sanctionedIntake || 0), 0)} Seats)
                   </span>
                 </Space>
               }
@@ -1109,14 +1111,14 @@ export const ProceedingsWorkflowPage: React.FC = () => {
               <div style={{ marginBottom: 12 }}>
                 <div><Text strong>Proceeding No:</Text> <code>{pdfParsedResult.parsedData?.proceedingNumber}</code></div>
                 <div><Text strong>Target College:</Text> {pdfParsedResult.college?.name} (Code: {pdfParsedResult.college?.code})</div>
-                <div><Text strong>Subject:</Text> {pdfParsedResult.parsedData?.subject}</div>
+                <div><Text strong>Subject:</Text> {pdfParsedResult.parsedData?.subject || `Provisional Affiliation Accorded for Academic Year ${pdfParsedResult.parsedData?.academicYear || '2026-27'} to ${pdfParsedResult.college?.name}`}</div>
               </div>
 
               <Table
                 size="small"
                 pagination={{ pageSize: 5 }}
-                dataSource={pdfParsedResult.parsedData?.courses || []}
-                rowKey="courseName"
+                dataSource={pdfParsedResult.parsedData?.items || pdfParsedResult.parsedData?.courses || []}
+                rowKey={(r: any, idx) => `${r?.courseName || idx}`}
                 columns={[
                   { title: 'Single Major Programme', dataIndex: 'courseName', key: 'courseName', render: (t) => <Text strong>{t}</Text> },
                   { title: 'Medium', dataIndex: 'medium', key: 'medium', width: 90, render: (m) => <Tag>{m || 'English'}</Tag> },

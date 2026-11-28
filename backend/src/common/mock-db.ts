@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { FEE_RATES_2026_27 } from '../fees/fee-rates-2026';
 
 export interface MockUser {
@@ -203,8 +205,177 @@ export class MockDatabase {
   public notifications: any[] = [];
   public lateFeeWaivers: any[] = [];
 
+  private saveTimer: NodeJS.Timeout | null = null;
+
   constructor() {
     this.seedMockData();
+    this.loadFromDisk();
+    this.registerExitHooks();
+  }
+
+  private getStorageFilePath(): string {
+    const candidatePaths = [
+      path.resolve(process.cwd(), 'data/mock-db-store.json'),
+      path.resolve(process.cwd(), 'backend/data/mock-db-store.json'),
+      path.resolve(__dirname, '../../data/mock-db-store.json'),
+      path.resolve(__dirname, '../../../data/mock-db-store.json'),
+    ];
+
+    // 1. If file already exists, return that path
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+
+    // 2. Otherwise return candidate whose directory exists
+    for (const p of candidatePaths) {
+      const dir = path.dirname(p);
+      if (fs.existsSync(dir)) {
+        return p;
+      }
+    }
+
+    // 3. Fallback: ensure backend/data exists
+    const fallback = path.resolve(process.cwd(), 'backend/data/mock-db-store.json');
+    try {
+      const dir = path.dirname(fallback);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    } catch (_) {}
+    return fallback;
+  }
+
+  public loadFromDisk(): void {
+    try {
+      const filePath = this.getStorageFilePath();
+      if (!fs.existsSync(filePath)) {
+        return;
+      }
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      if (!raw.trim()) {
+        return;
+      }
+      const data = JSON.parse(raw);
+
+      if (Array.isArray(data.colleges)) {
+        this.colleges = data.colleges;
+      }
+      if (Array.isArray(data.courses) && data.courses.length > 0) {
+        const seedMap = new Map(this.courses.map((c) => [c.id, c]));
+        for (const crs of data.courses) {
+          seedMap.set(crs.id, crs);
+        }
+        this.courses = Array.from(seedMap.values());
+      }
+      if (Array.isArray(data.students)) {
+        this.students = data.students;
+      }
+      if (Array.isArray(data.faculty)) {
+        this.faculty = data.faculty;
+      }
+      if (Array.isArray(data.proceedings)) {
+        this.proceedings = data.proceedings;
+      }
+      if (Array.isArray(data.demands)) {
+        this.demands = data.demands;
+      }
+      if (Array.isArray(data.payments)) {
+        this.payments = data.payments;
+      }
+      if (Array.isArray(data.workflowQueries)) {
+        this.workflowQueries = data.workflowQueries;
+      }
+      if (Array.isArray(data.notifications)) {
+        this.notifications = data.notifications;
+      }
+      if (Array.isArray(data.lateFeeWaivers)) {
+        this.lateFeeWaivers = data.lateFeeWaivers;
+      }
+      if (Array.isArray(data.auditLogs)) {
+        this.auditLogs = data.auditLogs;
+      }
+      if (Array.isArray(data.users)) {
+        const userMap = new Map(this.users.map((u) => [u.id, u]));
+        for (const u of data.users) {
+          userMap.set(u.id, u);
+        }
+        this.users = Array.from(userMap.values());
+      }
+
+      console.log(
+        `[MockDatabase] Restored persistent state from ${filePath}: ${this.colleges.length} colleges, ${this.proceedings.length} proceedings, ${this.courses.length} courses, ${this.demands.length} demands, ${this.students.length} students.`,
+      );
+    } catch (err) {
+      console.warn('[MockDatabase] Error loading persisted data from disk:', (err as Error).message);
+    }
+  }
+
+  public saveToDisk(): void {
+    try {
+      const filePath = this.getStorageFilePath();
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      const payload = {
+        colleges: this.colleges,
+        courses: this.courses,
+        students: this.students,
+        faculty: this.faculty,
+        proceedings: this.proceedings,
+        demands: this.demands,
+        payments: this.payments,
+        workflowQueries: this.workflowQueries,
+        auditLogs: this.auditLogs,
+        notifications: this.notifications,
+        lateFeeWaivers: this.lateFeeWaivers,
+        users: this.users,
+        savedAt: new Date().toISOString(),
+      };
+
+      const tmpPath = `${filePath}.tmp.${Date.now()}`;
+      fs.writeFileSync(tmpPath, JSON.stringify(payload, null, 2), 'utf-8');
+      fs.renameSync(tmpPath, filePath);
+    } catch (err) {
+      console.warn('[MockDatabase] Failed to write persistent store to disk:', (err as Error).message);
+    }
+  }
+
+  public save(): void {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = setTimeout(() => {
+      this.saveToDisk();
+      this.saveTimer = null;
+    }, 50);
+    if (this.saveTimer.unref) {
+      this.saveTimer.unref();
+    }
+  }
+
+  private registerExitHooks(): void {
+    const interval = setInterval(() => {
+      this.saveToDisk();
+    }, 2000);
+    if (interval.unref) {
+      interval.unref();
+    }
+
+    process.on('beforeExit', () => {
+      this.saveToDisk();
+    });
+    process.on('SIGINT', () => {
+      this.saveToDisk();
+      process.exit(0);
+    });
+    process.on('SIGTERM', () => {
+      this.saveToDisk();
+      process.exit(0);
+    });
   }
 
   private seedMockData() {
@@ -608,6 +779,7 @@ export class MockDatabase {
     if (includeCourses) {
       this.courses = [];
     }
+    this.saveToDisk();
   }
 }
 

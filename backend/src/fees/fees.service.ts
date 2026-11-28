@@ -161,6 +161,7 @@ export class FeesService {
       });
     }
 
+    mockDb.save();
     return newDemand;
   }
 

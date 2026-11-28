@@ -117,6 +117,7 @@ export class ProceedingsService {
     };
 
     mockDb.proceedings.push(newProc);
+    mockDb.save();
     return newProc;
   }
 
@@ -127,6 +128,7 @@ export class ProceedingsService {
     }
     mockDb.proceedings[index].status = 'SUPERINTENDENT_CHECKED';
     mockDb.proceedings[index].superintendentId = superintendentId;
+    mockDb.save();
     return mockDb.proceedings[index];
   }
 
@@ -209,6 +211,7 @@ export class ProceedingsService {
       }
     }
 
+    mockDb.save();
     return proc;
   }
 
@@ -236,6 +239,7 @@ export class ProceedingsService {
     }
     mockDb.proceedings[index].status = 'ACKNOWLEDGED';
     mockDb.proceedings[index].acknowledgedAt = new Date().toISOString();
+    mockDb.save();
     return mockDb.proceedings[index];
   }
 
@@ -361,6 +365,7 @@ export class ProceedingsService {
       });
     });
 
+    mockDb.save();
     return {
       success: true,
       totalReceived: rows.length,
@@ -471,7 +476,11 @@ export class ProceedingsService {
     const dscHash = `SHA256:${Buffer.from(`${proceedingNumber}-${Date.now()}-AKNU-VC-DEAN`).toString('hex')}`;
 
     // 1. Format Proceeding Items
-    const procItems = (dto.items || []).map((it) => {
+    const sourceItems = (dto.items && dto.items.length > 0)
+      ? dto.items
+      : ProceedingsPdfParserService.DEFAULT_AKNU_PROGRAMMES;
+
+    const procItems = sourceItems.map((it) => {
       const intake = Number(it.sanctionedIntake) || 60;
       const cq = it.convenorQuota !== undefined ? Number(it.convenorQuota) : Math.round(intake * 0.7);
       const mq = it.managementQuota !== undefined ? Number(it.managementQuota) : Math.round(intake * 0.3);
@@ -488,6 +497,12 @@ export class ProceedingsService {
     // 2. Create or Update Proceeding in Mock DB
     const existingIdx = mockDb.proceedings.findIndex((p) => p.collegeId === college.id && p.academicYear === year);
 
+    const conditionsText = Array.isArray(dto.conditions)
+      ? dto.conditions.join('\n\n')
+      : typeof dto.conditions === 'string'
+      ? dto.conditions
+      : ProceedingsPdfParserService.OFFICIAL_CONDITIONS.join('\n\n');
+
     const procRecord: MockProceeding = {
       id: existingIdx !== -1 ? mockDb.proceedings[existingIdx].id : `proc-${Date.now()}`,
       proceedingNumber,
@@ -502,7 +517,7 @@ export class ProceedingsService {
       issuedAt: new Date().toISOString(),
       subject: `Provisional Affiliation accorded for academic year ${year} to ${college.name}`,
       bodyTemplate: `In exercise of the powers conferred under the Act of this University, ${college.name} is hereby granted Conditional Affiliation for the academic year ${year} with the approved single major honours programs and sanctioned intakes placed hereunder.`,
-      conditions: (dto.conditions || ProceedingsPdfParserService.OFFICIAL_CONDITIONS).join('\n\n'),
+      conditions: conditionsText,
       qrVerificationCode,
       pdfUrl: dto.pdfUrl,
       originalFileName: dto.originalFileName || `${college.code}_Affiliation_Order.pdf`,
@@ -603,6 +618,7 @@ export class ProceedingsService {
       `Successfully auto-synced proceeding ${proceedingNumber} with ${procItems.length} courses to College ${college.code} (${college.name})`,
     );
 
+    mockDb.save();
     return {
       success: true,
       message: `Affiliation proceeding ${proceedingNumber} issued and courses auto-synced to ${college.name}!`,

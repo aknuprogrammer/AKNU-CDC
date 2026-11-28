@@ -2915,7 +2915,7 @@ export const CollegesMasterPage: React.FC = () => {
         title={
           <Space>
             <BankOutlined style={{ color: '#002147' }} />
-            <span>Register New Affiliated College & Map Sanctioned Programs</span>
+            <span>Register New Affiliated College</span>
           </Space>
         }
         open={createCollegeModal}
@@ -3377,13 +3377,13 @@ export const CollegesMasterPage: React.FC = () => {
       </Drawer>
 
       {/* ==========================================
-          MODAL: EDIT COLLEGE & COURSE INTAKES
+          MODAL: EDIT COLLEGE
           ========================================== */}
       <Modal
         title={
           <Space>
             <EditOutlined style={{ color: '#1890ff' }} />
-            <span>Edit Affiliated College & Sanctioned Courses ({editingCollege?.code})</span>
+            <span>Edit Affiliated College ({editingCollege?.code})</span>
           </Space>
         }
         open={editCollegeModalOpen}
